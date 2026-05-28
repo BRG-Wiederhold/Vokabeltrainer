@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pontes — Lateinvokabeltrainer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a150e;color:#1a1a18;min-height:100vh}
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:1100px;margin:0 auto;background:#faf7f2;box-shadow:0 0 60px rgba(0,0,0,.5)}
+
+/* ── ANTIQUE HEADER ── */
+.header{position:relative;overflow:hidden;border-bottom:3px solid #8B6914;background:#1a150e;padding:0}
+.header-mosaic{width:100%;height:110px;object-fit:cover;object-position:center 40%;display:block;opacity:.55;filter:sepia(.3)}
+.header-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(26,21,14,.85) 0%,rgba(26,21,14,.5) 50%,rgba(26,21,14,.85) 100%)}
+.header-content{position:absolute;inset:0;display:flex;align-items:center;padding:0 1.5rem;gap:14px}
+.header-content h1{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:#E8C96A;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.badge{background:rgba(232,201,106,.18);color:#E8C96A;font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;letter-spacing:.04em;border:1px solid rgba(232,201,106,.35)}
+.badge-green{background:rgba(90,160,50,.2);color:#9ecf5a;border-color:rgba(90,160,50,.3)}
+.header-sub{font-size:11px;color:rgba(232,201,106,.55);margin-left:auto;white-space:nowrap}
+
+.main{display:flex;flex:1;min-height:0}
+
+/* ── SIDEBAR ── */
+.sidebar{width:195px;border-right:2px solid #d4c89a;overflow-y:auto;padding:.5rem 0;background:#f5f0e8;flex-shrink:0;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c4b07a' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.sidebar-title{font-family:'Cinzel',serif;font-size:10px;font-weight:600;color:#8B6914;letter-spacing:.08em;text-transform:uppercase;padding:.6rem 1rem .4rem;border-bottom:1px solid #d4c89a;margin-bottom:.25rem}
+.lektion-btn{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:5px 1rem;font-size:13px;color:#4a3f2f;cursor:pointer;text-align:left;gap:8px;transition:background .1s}
+.lektion-btn:hover{background:rgba(139,105,20,.08)}
+.lektion-btn.active{background:rgba(139,105,20,.15);color:#6b4f0a;font-weight:600;border-right:3px solid #8B6914}
+.lektion-btn .count{font-size:10px;color:#a08040;background:rgba(139,105,20,.12);padding:1px 6px;border-radius:10px;flex-shrink:0}
+.lektion-btn.has-voks .count{background:rgba(90,160,50,.15);color:#5a7a1a}
+
+/* ── CONTENT ── */
+.content{flex:1;padding:1.5rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem;min-width:0;background:#faf7f2;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23c4b07a' fill-opacity='0.07' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E")}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;height:300px;color:#a08040}
+.empty-state i{font-size:40px;color:#c4b07a}
+.empty-state p{font-size:14px;text-align:center;max-width:260px;line-height:1.5;color:#7a6030}
+
+/* ── SECTION HEADER ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.section-header h2{font-family:'Cinzel',serif;font-size:17px;font-weight:600;color:#3a2a10;letter-spacing:.02em}
+
+/* ── BUTTONS ── */
+.btn{background:#faf7f2;border:1px solid #c4b07a;border-radius:6px;padding:6px 14px;font-size:13px;color:#4a3f2f;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:background .1s,border-color .1s}
+.btn:hover{background:#f0e8d0;border-color:#8B6914}
+.btn.primary{background:#6b4f0a;border-color:#6b4f0a;color:#E8C96A}
+.btn.primary:hover{background:#4a3208;border-color:#4a3208}
+.btn.danger{border-color:#c47a7a;color:#8B2020}
+.btn.danger:hover{background:#fce8e8}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.pdf-btn{background:#1a150e;border-color:#8B6914;color:#E8C96A}
+.btn.pdf-btn:hover{background:#2e2210}
+
+/* ── UPLOAD TOGGLE ── */
+.upload-toggle{display:flex;gap:0;border:1px solid #c4b07a;border-radius:6px;overflow:hidden;width:fit-content}
+.upload-tab-btn{background:none;border:none;padding:6px 16px;font-size:13px;color:#7a6030;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .1s}
+.upload-tab-btn:not(:last-child){border-right:1px solid #c4b07a}
+.upload-tab-btn.active{background:rgba(139,105,20,.15);color:#6b4f0a;font-weight:600}
+.upload-tab-btn:hover:not(.active){background:rgba(139,105,20,.06)}
+.upload-zone{border:2px dashed #c4b07a;border-radius:10px;padding:1.75rem;text-align:center;cursor:pointer;background:rgba(139,105,20,.04);transition:border-color .15s,background .15s}
+.upload-zone:hover{border-color:#8B6914;background:rgba(139,105,20,.1)}
+.upload-zone i{font-size:28px;color:#c4b07a;margin-bottom:8px;display:block}
+.upload-zone p{font-size:13px;color:#7a6030}
+.upload-zone small{font-size:11px;color:#a08040}
+input[type="file"]{display:none}
+
+/* ── TABLE ── */
+.vok-table{width:100%;border-collapse:collapse;font-size:13px}
+.vok-table th{text-align:left;padding:6px 10px;font-size:11px;font-weight:600;color:#a08040;border-bottom:2px solid #d4c89a;text-transform:uppercase;letter-spacing:.05em;font-family:'Cinzel',serif}
+.vok-table td{padding:7px 10px;border-bottom:1px solid #ede5cc;vertical-align:top}
+.vok-table tr:last-child td{border-bottom:none}
+.vok-table tr:hover td{background:rgba(139,105,20,.05)}
+.vok-lat{font-weight:600;color:#3a2a10}
+.vok-info{font-size:11px;color:#a08040;font-style:italic}
+
+/* ── QUIZ ── */
+.quiz-card{background:#fff;border:1px solid #d4c89a;border-radius:10px;padding:1.5rem;box-shadow:0 2px 12px rgba(139,105,20,.08)}
+.quiz-progress{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem}
+.progress-bar{flex:1;height:5px;background:#ede5cc;border-radius:3px}
+.progress-fill{height:5px;background:linear-gradient(90deg,#8B6914,#E8C96A);border-radius:3px;transition:width .35s}
+.progress-text{font-size:12px;color:#a08040;white-space:nowrap}
+.latin-word{font-family:'Cinzel',serif;font-size:30px;font-weight:700;margin-bottom:4px;color:#3a2a10;letter-spacing:.01em}
+.latin-meta{font-size:13px;color:#a08040;margin-bottom:1.25rem;font-style:italic}
+.answer-row{display:flex;gap:8px}
+.answer-input{flex:1;padding:9px 13px;font-size:15px;border:1px solid #c4b07a;border-radius:7px;background:#fffdf7;color:#3a2a10;font-family:inherit;transition:border-color .15s,box-shadow .15s}
+.answer-input:focus{outline:none;border-color:#8B6914;box-shadow:0 0 0 3px rgba(139,105,20,.12)}
+.answer-input.correct{border-color:#5a8a20;background:#f0f8e0}
+.answer-input.wrong{border-color:#c84040;background:#fef0f0}
+.feedback{margin-top:.75rem;padding:.75rem 1rem;border-radius:7px;font-size:13px;display:none;line-height:1.5}
+.feedback.correct{display:block;background:#f0f8e0;color:#3a6010;border:1px solid #b0d870}
+.feedback.wrong{display:block;background:#fef0f0;color:#8B2020;border:1px solid #e8a0a0}
+
+/* ── RESULT ── */
+.quiz-result{text-align:center;padding:2rem;background:#fff;border:1px solid #d4c89a;border-radius:12px;box-shadow:0 2px 20px rgba(139,105,20,.1)}
+.result-score{font-family:'Cinzel',serif;font-size:56px;font-weight:700;color:#8B6914;margin:.5rem 0;letter-spacing:-.02em}
+.result-label{font-size:14px;color:#7a6030;font-style:italic}
+.result-wrong-list{background:#fffdf7;border:1px solid #d4c89a;border-radius:8px;padding:1rem;text-align:left;margin:1rem 0;max-height:180px;overflow-y:auto}
+.result-wrong-list h4{font-family:'Cinzel',serif;font-size:12px;color:#8B6914;margin-bottom:.5rem;letter-spacing:.04em}
+.wrong-item{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #ede5cc;gap:12px}
+.wrong-item:last-child{border-bottom:none}
+.wrong-lat{font-weight:600;color:#3a2a10}
+.wrong-deu{color:#7a6030}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:1rem 0}
+.stat-card{background:#fffdf7;border:1px solid #d4c89a;border-radius:8px;padding:.75rem;text-align:center}
+.stat-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700}
+.stat-lab{font-size:11px;color:#a08040;margin-top:2px}
+.stat-val.green{color:#5a8a20}
+.stat-val.red{color:#c84040}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:2px solid #d4c89a;margin-bottom:1rem}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:7px 15px;font-size:13px;color:#a08040;cursor:pointer;font-family:inherit;margin-bottom:-2px;transition:color .15s}
+.tab-btn.active{color:#6b4f0a;border-bottom-color:#8B6914;font-weight:600}
+.tab-btn:hover:not(.active){color:#3a2a10}
+
+/* ── IMPORT / MANUAL ── */
+.import-result{border-radius:7px;padding:.75rem 1rem;font-size:13px;display:none;line-height:1.5}
+.import-result.ok{display:block;background:#f0f8e0;color:#3a6010;border:1px solid #b0d870}
+.import-result.error{display:block;background:#fef0f0;color:#8B2020;border:1px solid #e8a0a0}
+.ai-info{background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.25);border-radius:7px;padding:.75rem 1rem;font-size:12px;color:#6b4f0a;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.manual-add{background:#fffdf7;border-radius:10px;padding:1rem;border:1px solid #d4c89a}
+.manual-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.field-label{font-size:11px;color:#a08040;margin-bottom:4px;font-weight:500}
+.mini-input{padding:7px 10px;font-size:13px;border:1px solid #c4b07a;border-radius:6px;width:100%;background:#fffdf7;color:#3a2a10;font-family:inherit}
+.mini-input:focus{outline:none;border-color:#8B6914}
+.preview-img{max-width:100%;max-height:160px;border-radius:7px;border:1px solid #d4c89a;margin-top:.5rem;display:block}
+
+/* ── MULTI QUIZ ── */
+.actions-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.multi-btn{width:100%;background:none;border:none;border-top:1px solid #d4c89a;margin-top:.25rem;padding:8px 1rem;font-size:12px;font-weight:600;color:#8B6914;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .1s}
+.multi-btn:hover{background:rgba(139,105,20,.1)}
+.multi-panel{background:#ede5cc;border-top:1px solid #d4c89a;padding:.75rem 1rem;display:none}
+.multi-panel.open{display:block}
+.multi-panel-title{font-family:'Cinzel',serif;font-size:10px;font-weight:600;color:#8B6914;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem}
+.multi-chips{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:.5rem}
+.multi-chip{display:inline-flex;align-items:center;background:#faf7f2;color:#4a3f2f;border-radius:5px;padding:3px 7px;font-size:12px;cursor:pointer;border:1px solid #c4b07a;user-select:none;transition:all .1s}
+.multi-chip.selected{background:#6b4f0a;color:#E8C96A;border-color:#8B6914;font-weight:600}
+.multi-chip:hover:not(.selected){background:rgba(139,105,20,.15);border-color:#8B6914;color:#6b4f0a}
+.multi-chip.disabled{opacity:.35;cursor:not-allowed}
+.multi-start{width:100%;margin-top:.5rem;background:#6b4f0a;border:none;border-radius:6px;padding:7px;font-size:13px;font-weight:600;color:#E8C96A;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .1s}
+.multi-start:hover{background:#4a3208}
+.multi-start:disabled{opacity:.4;cursor:not-allowed}
+.quiz-lektion-tag{display:inline-block;background:rgba(139,105,20,.15);color:#8B6914;border-radius:4px;font-size:11px;font-weight:600;padding:2px 7px;margin-left:8px;vertical-align:middle;border:1px solid rgba(139,105,20,.25)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .9s linear infinite;display:inline-block}
+.info-banner{background:#f0f8e0;border:1px solid #b0d870;border-radius:7px;padding:.65rem 1rem;font-size:12px;color:#3a6010;display:flex;align-items:center;gap:8px}
+
+/* ── DECORATIVE DIVIDER ── */
+.ornament{text-align:center;color:#c4b07a;font-size:18px;letter-spacing:6px;margin:.25rem 0;opacity:.6}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <img class="header-mosaic" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Colosseum_in_Rome%2C_Italy_-_April_2007.jpg/1280px-Colosseum_in_Rome%2C_Italy_-_April_2007.jpg" alt="Kolosseum Rom" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Pantheon%2C_Rome.jpg/1280px-Pantheon%2C_Rome.jpg'">
+    <div class="header-overlay"></div>
+    <div class="header-content">
+      <h1>Pontes — Lateinvokabeltrainer</h1>
+      <span class="badge">Lektionen 1–30</span>
+      <span class="badge badge-green" id="total-badge">852 Vokabeln</span>
+      <span class="header-sub">Tippfehler &amp; fehlende Artikel werden ignoriert &nbsp;·&nbsp; Eine korrekte Bedeutung genügt</span>
+    </div>
+  </div>
+  <div class="main">
+    <nav class="sidebar">
+      <div class="sidebar-title">Lektionen</div>
+      <div id="lektion-list"></div>
+      <button class="multi-btn" onclick="toggleMultiPanel()"><i class="ti ti-layers-intersect" aria-hidden="true"></i> Kombinationstest</button>
+      <div class="multi-panel" id="multi-panel">
+        <div class="multi-panel-title">Bis zu 5 Lektionen wählen</div>
+        <div class="multi-chips" id="multi-chips"></div>
+        <button class="multi-start" id="multi-start-btn" onclick="startMultiQuiz()" disabled><i class="ti ti-player-play" aria-hidden="true"></i> <span id="multi-start-label">Test starten</span></button>
+      </div>
+    </nav>
+    <div class="content" id="content">
+      <div class="empty-state">
+        <i class="ti ti-book-2" aria-hidden="true"></i>
+        <p>Wähle eine Lektion aus der linken Seitenleiste, um die Vokabeln anzusehen oder einen Test zu starten.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── PRELOADED DATA FROM PDF ─────────────────────────────────────────────────
+const PRELOADED = {"1":[{"latein":"audīre, audiō","bedeutungen":["(zu)hören"],"info":""},{"latein":"clāmor, clāmōris m.","bedeutungen":["der Lärm","das Geschrei","der Ruf"],"info":""},{"latein":"ecce!","bedeutungen":["sieh(e)!","sieh(e) da!"],"info":""},{"latein":"etiam","bedeutungen":["auch","sogar"],"info":"Konj."},{"latein":"exspectāre, exspectō","bedeutungen":["erwarten"],"info":""},{"latein":"familia, familiae f.","bedeutungen":["die Hausgemeinschaft","die Familie"],"info":""},{"latein":"hodiē","bedeutungen":["heute"],"info":"Adv."},{"latein":"ibī","bedeutungen":["dort"],"info":"Adv."},{"latein":"intrāre, intrō","bedeutungen":["betreten","eintreten"],"info":""},{"latein":"nam","bedeutungen":["denn"],"info":"Konj."},{"latein":"nōn","bedeutungen":["nicht"],"info":""},{"latein":"nunc","bedeutungen":["nun","jetzt"],"info":"Adv."},{"latein":"quaerere, quaerō","bedeutungen":["suchen","fragen"],"info":""},{"latein":"quid?","bedeutungen":["was?"],"info":""},{"latein":"rīdēre, rīdeō","bedeutungen":["lachen","jdn. auslachen"],"info":""},{"latein":"rogāre, rogō","bedeutungen":["fragen"],"info":""},{"latein":"sed","bedeutungen":["aber","sondern"],"info":"Konj."},{"latein":"subitō","bedeutungen":["plötzlich"],"info":"Adv."},{"latein":"tenēre, teneō","bedeutungen":["halten"],"info":""},{"latein":"tum","bedeutungen":["dann","darauf","da"],"info":"Adv."},{"latein":"ubī?","bedeutungen":["wo?"],"info":""},{"latein":"vidēre, videō, vīdī","bedeutungen":["sehen"],"info":""}],"2":[{"latein":"adhūc","bedeutungen":["bis jetzt","noch"],"info":"Adv."},{"latein":"amāre, amō","bedeutungen":["lieben","mögen"],"info":""},{"latein":"ātrium, ātriī n.","bedeutungen":["das Atrium"],"info":""},{"latein":"culīna, culīnae f.","bedeutungen":["die Küche"],"info":""},{"latein":"cūr?","bedeutungen":["warum?"],"info":"Adv."},{"latein":"dēbēre, dēbeō, dēbuī","bedeutungen":["müssen"],"info":""},{"latein":"dīcere, dīcō, dīxī, dictum","bedeutungen":["sagen","sprechen","reden"],"info":""},{"latein":"explēre, expleō","bedeutungen":["erfüllen"],"info":""},{"latein":"frāter, frātris m.","bedeutungen":["der Bruder"],"info":""},{"latein":"illīc","bedeutungen":["dort"],"info":"Adv."},{"latein":"itaque","bedeutungen":["deshalb"],"info":"Adv."},{"latein":"iterum","bedeutungen":["wieder"],"info":"Adv."},{"latein":"labor, lābōris m.","bedeutungen":["die Mühe","die Arbeit"],"info":""},{"latein":"līberī, līberōrum m. Pl.","bedeutungen":["die Kinder"],"info":""},{"latein":"neglegere, neglegō","bedeutungen":["vernachlässigen","nicht beachten"],"info":""},{"latein":"officium, officiī n.","bedeutungen":["die Pflicht"],"info":""},{"latein":"ōtium, ōtiī n.","bedeutungen":["die Ruhe","die Freizeit"],"info":""},{"latein":"parentēs, parent(i)um m. Pl.","bedeutungen":["die Eltern"],"info":""},{"latein":"pergere, pergō","bedeutungen":["etw. weiter tun","fortsetzen"],"info":""},{"latein":"placēre, placeō","bedeutungen":["gefallen","Spaß machen"],"info":""},{"latein":"puella, puellae f.","bedeutungen":["das Mädchen"],"info":""},{"latein":"puer, puerī m.","bedeutungen":["das Kind","der Junge"],"info":""},{"latein":"respondēre, respondeō","bedeutungen":["antworten"],"info":""},{"latein":"semper","bedeutungen":["immer"],"info":"Adv."},{"latein":"soror, sorōris f.","bedeutungen":["die Schwester"],"info":""},{"latein":"statim","bedeutungen":["sofort"],"info":"Adv."},{"latein":"vir, virī m.","bedeutungen":["der Mann"],"info":""}],"3":[{"latein":"ad","bedeutungen":["zu (… hin)","bei"],"info":"Präp. + Akk."},{"latein":"adiuvāre, adiuvō, adiūvī","bedeutungen":["unterstützen"],"info":""},{"latein":"agere, agō, ēgī, āctum","bedeutungen":["tun","handeln"],"info":""},{"latein":"alere, alō, aluī","bedeutungen":["nähren","ernähren"],"info":""},{"latein":"ante","bedeutungen":["vor"],"info":"Präp. + Akk."},{"latein":"autem","bedeutungen":["aber"],"info":"Konj."},{"latein":"bene","bedeutungen":["gut"],"info":"Adv."},{"latein":"bōs, bovis m.","bedeutungen":["das Rind","der Ochse"],"info":""},{"latein":"caedere, caedō, cecīdī, caesum","bedeutungen":["töten","schlachten"],"info":""},{"latein":"canis, canis m.","bedeutungen":["der Hund"],"info":""},{"latein":"cēna, cēnae f.","bedeutungen":["die Mahlzeit","das Essen"],"info":""},{"latein":"certē","bedeutungen":["sicher","gewiss"],"info":"Adv."},{"latein":"dēlectāre, delectō","bedeutungen":["erfreuen"],"info":""},{"latein":"ego","bedeutungen":["ich"],"info":""},{"latein":"equus, equī m.","bedeutungen":["das Pferd"],"info":""},{"latein":"esse, sum, fuī","bedeutungen":["sein"],"info":""},{"latein":"hortus, hortī m.","bedeutungen":["der Garten"],"info":""},{"latein":"iam","bedeutungen":["schon","gleich","jetzt"],"info":"Adv."},{"latein":"igitur","bedeutungen":["also"],"info":"Adv."},{"latein":"in","bedeutungen":["in (…hinein)","gegen","nach","auf"],"info":"Präp. + Akk."},{"latein":"īnstruere, īnstruō","bedeutungen":["anweisen","unterrichten","bauen"],"info":""},{"latein":"nōs","bedeutungen":["wir"],"info":""},{"latein":"obsecrāre, obsecrō","bedeutungen":["anflehen"],"info":""},{"latein":"parāre, parō","bedeutungen":["vorbereiten","zubereiten"],"info":""},{"latein":"per","bedeutungen":["über","durch","während"],"info":"Präp. + Akk."},{"latein":"properāre, properō","bedeutungen":["eilen","sich beeilen"],"info":""},{"latein":"salūtāre, salūtō","bedeutungen":["grüßen"],"info":""},{"latein":"servāre, servō","bedeutungen":["retten"],"info":""},{"latein":"tū","bedeutungen":["du"],"info":""},{"latein":"uxor, uxōris f.","bedeutungen":["die Ehefrau"],"info":""},{"latein":"vīlla, vīllae f.","bedeutungen":["das Landhaus","das Landgut"],"info":""},{"latein":"vōs","bedeutungen":["ihr"],"info":""}],"4":[{"latein":"cōnsīdere, cōnsīdō, cōnsēdī","bedeutungen":["sich hinsetzen","sich niederlassen"],"info":""},{"latein":"discere, discō","bedeutungen":["lernen"],"info":""},{"latein":"discipula, discipulae f.","bedeutungen":["die Schülerin"],"info":""},{"latein":"discipulus, discipulī m.","bedeutungen":["der Schüler"],"info":""},{"latein":"docēre, doceō, docuī, doctum","bedeutungen":["unterrichten","lehren"],"info":""},{"latein":"domum","bedeutungen":["nach Hause"],"info":""},{"latein":"dūcere, dūcō, dūxī, ductum","bedeutungen":["führen","ziehen"],"info":""},{"latein":"ergō","bedeutungen":["deshalb","also"],"info":"Adv."},{"latein":"habēre, habeō, habuī, habitum","bedeutungen":["haben","halten"],"info":""},{"latein":"ita","bedeutungen":["so"],"info":"Adv."},{"latein":"legere, legō, lēgī","bedeutungen":["lesen"],"info":""},{"latein":"magister, magistrī m.","bedeutungen":["der Lehrer"],"info":""},{"latein":"monēre, moneō","bedeutungen":["ermahnen","mahnen","warnen"],"info":""},{"latein":"mōnstrāre, mōnstrō","bedeutungen":["zeigen"],"info":""},{"latein":"num?","bedeutungen":["denn?","etwa?"],"info":""},{"latein":"portāre, portō","bedeutungen":["tragen"],"info":""},{"latein":"posse, possum, potuī","bedeutungen":["können"],"info":""},{"latein":"posteā","bedeutungen":["danach","später"],"info":"Adv."},{"latein":"pūnīre, pūniō","bedeutungen":["bestrafen"],"info":""},{"latein":"quis?","bedeutungen":["wer?"],"info":""},{"latein":"rīdēre, rīdeō","bedeutungen":["lachen","jdn. auslachen"],"info":""},{"latein":"schola, scholae f.","bedeutungen":["die Schule"],"info":""},{"latein":"scrībere, scrībō","bedeutungen":["schreiben"],"info":""},{"latein":"sedēre, sedeō","bedeutungen":["sitzen"],"info":""},{"latein":"tacēre, taceō","bedeutungen":["schweigen"],"info":""},{"latein":"vocāre, vocō","bedeutungen":["rufen"],"info":""}],"5":[{"latein":"accēdere, accēdō, accessī","bedeutungen":["sich nähern","herbeikommen"],"info":""},{"latein":"accūsāre, accūsō","bedeutungen":["beschuldigen"],"info":""},{"latein":"amīca, amīcae f.","bedeutungen":["die Freundin"],"info":""},{"latein":"amīcus, amīcī m.","bedeutungen":["der Freund"],"info":""},{"latein":"aureus, -a, -um","bedeutungen":["golden"],"info":""},{"latein":"aut","bedeutungen":["oder"],"info":"Konj."},{"latein":"bonus, -a, -um","bedeutungen":["gut"],"info":""},{"latein":"capere, capiō, cēpī, captum","bedeutungen":["fangen","ergreifen","einnehmen","gefangen nehmen"],"info":""},{"latein":"cōnspicere, cōnspiciō","bedeutungen":["erblicken","sehen"],"info":""},{"latein":"cupere, cupiō, cupīvī","bedeutungen":["wollen","wünschen"],"info":""},{"latein":"dōnum, dōnī n.","bedeutungen":["das Geschenk"],"info":""},{"latein":"facere, faciō, fēcī, factum","bedeutungen":["machen","tun"],"info":""},{"latein":"forum, forī n.","bedeutungen":["das Forum","der Marktplatz"],"info":""},{"latein":"fugere, fugiō, fūgī","bedeutungen":["fliehen","meiden"],"info":""},{"latein":"fūr, fūris m.","bedeutungen":["der Dieb"],"info":""},{"latein":"homō, hominis m.","bedeutungen":["der Mensch","der Mann"],"info":""},{"latein":"incipere, incipiō","bedeutungen":["anfangen","beginnen"],"info":""},{"latein":"īrātus, -a, -um","bedeutungen":["zornig","wütend"],"info":""},{"latein":"magnus, -a, -um","bedeutungen":["groß"],"info":""},{"latein":"malus, -a, -um","bedeutungen":["schlecht","böse"],"info":""},{"latein":"manēre, maneō","bedeutungen":["bleiben","erwarten"],"info":""},{"latein":"miser, -a, -um","bedeutungen":["arm","unglücklich"],"info":""},{"latein":"monumentum, monumentī n.","bedeutungen":["das Denkmal","das Grabmal"],"info":""},{"latein":"mors, mortis f.","bedeutungen":["der Tod"],"info":""},{"latein":"multī, -ae, -a","bedeutungen":["viele"],"info":""},{"latein":"parvus, -a, -um","bedeutungen":["klein"],"info":""},{"latein":"praebēre, praebeō","bedeutungen":["bieten","gewähren","anbieten"],"info":""},{"latein":"profectō","bedeutungen":["tatsächlich"],"info":"Adv."},{"latein":"prope","bedeutungen":["nahe bei","in die Nähe (von)"],"info":"Präp. + Akk."},{"latein":"pulcher, -chra, -chrum","bedeutungen":["schön"],"info":""},{"latein":"rēctus, -a, -um","bedeutungen":["gerade","richtig","ehrlich"],"info":""},{"latein":"reddere, reddō","bedeutungen":["zurückgeben"],"info":""},{"latein":"Rōmānus, -a, -um","bedeutungen":["römisch"],"info":""},{"latein":"statua, statuae f.","bedeutungen":["die Statue"],"info":""},{"latein":"tam","bedeutungen":["so"],"info":"Adv."},{"latein":"tūtus, -a, -um","bedeutungen":["sicher"],"info":""}],"6":[{"latein":"agitātor, agitātōris m.","bedeutungen":["der Wagenlenker"],"info":""},{"latein":"arcēre, arceō, arcuī","bedeutungen":["abwehren","fernhalten"],"info":""},{"latein":"audītor, audītōris m.","bedeutungen":["der Zuhörer"],"info":""},{"latein":"canere, canō","bedeutungen":["ertönen"],"info":""},{"latein":"cēterī, -ae, -a Pl.","bedeutungen":["die übrigen"],"info":""},{"latein":"crēscere, crēscō, crēvī","bedeutungen":["wachsen"],"info":""},{"latein":"cūnctī, -ae, -a Pl.","bedeutungen":["alle"],"info":""},{"latein":"dare, dō, dedī, datum","bedeutungen":["geben"],"info":""},{"latein":"ferē","bedeutungen":["fast","etwa"],"info":"Adv."},{"latein":"gaudium, gaudiī n.","bedeutungen":["die Freude"],"info":""},{"latein":"iam","bedeutungen":["schon","gleich","jetzt"],"info":"Adv."},{"latein":"imperātor, imperātōris m.","bedeutungen":["der Kaiser","der Feldherr"],"info":""},{"latein":"incitāre, incitō","bedeutungen":["antreiben","anfeuern"],"info":""},{"latein":"inter","bedeutungen":["zwischen","unter"],"info":"Präp. + Akk."},{"latein":"meus, -a, -um","bedeutungen":["mein(e)"],"info":""},{"latein":"mortuus, -a, -um","bedeutungen":["tot"],"info":""},{"latein":"noster, -tra, -trum","bedeutungen":["unser(e)"],"info":""},{"latein":"pecūnia, pecūniae f.","bedeutungen":["das Geld"],"info":""},{"latein":"praeclārus, -a, -um","bedeutungen":["berühmt","ausgezeichnet"],"info":""},{"latein":"praestāre, praestō","bedeutungen":["sich hervortun","auszeichnen","zeigen"],"info":""},{"latein":"sē refl.","bedeutungen":["sich"],"info":"Pers.-Pron."},{"latein":"sīgnum, sīgnī n.","bedeutungen":["das Zeichen"],"info":""},{"latein":"simul","bedeutungen":["gleichzeitig","zugleich"],"info":"Adv."},{"latein":"spectāre, spectō","bedeutungen":["anschauen","betrachten","sehen"],"info":""},{"latein":"spectātor, spectātōris m.","bedeutungen":["der Zuschauer"],"info":""},{"latein":"surgere, surgō","bedeutungen":["aufstehen","sich erheben"],"info":""},{"latein":"suus, -a, -um refl.","bedeutungen":["sein(e)","ihr(e)"],"info":""},{"latein":"tandem","bedeutungen":["schließlich","endlich"],"info":"Adv."},{"latein":"tangere, tangō","bedeutungen":["berühren"],"info":""},{"latein":"tuba, tubae f.","bedeutungen":["die Trompete"],"info":""},{"latein":"tunica, tunicae f.","bedeutungen":["die Tunika"],"info":""},{"latein":"tuus, -a, -um","bedeutungen":["dein(e)"],"info":""},{"latein":"verbum, verbī n.","bedeutungen":["das Wort"],"info":""},{"latein":"vester, -tra, -trum","bedeutungen":["euer","eure"],"info":""},{"latein":"victor, victōris m.","bedeutungen":["der Sieger"],"info":""},{"latein":"vincere, vincō","bedeutungen":["siegen","besiegen","umstimmen"],"info":""}],"7":[{"latein":"ā, ab","bedeutungen":["von"],"info":"Präp. + Abl."},{"latein":"accipere, accipiō, accēpī, acceptum","bedeutungen":["annehmen","aufnehmen","empfangen","erfahren"],"info":""},{"latein":"aestās, aestātis f.","bedeutungen":["der Sommer"],"info":""},{"latein":"aqua, aquae f.","bedeutungen":["das Wasser"],"info":""},{"latein":"at","bedeutungen":["aber"],"info":"Konj."},{"latein":"cōgitāre, cōgitō","bedeutungen":["denken"],"info":""},{"latein":"cōnsilium, cōnsiliī n.","bedeutungen":["der Rat","die Beratung","der Plan"],"info":""},{"latein":"cum","bedeutungen":["mit","zusammen mit"],"info":"Präp. + Abl."},{"latein":"dēpōnere, dēpōnō, dēposuī","bedeutungen":["ablegen"],"info":""},{"latein":"ē, ex","bedeutungen":["aus (… heraus)","von","seit"],"info":"Präp. + Abl."},{"latein":"ēgregius, -a, -um","bedeutungen":["hervorragend","ausgezeichnet"],"info":""},{"latein":"errāre, errō","bedeutungen":["irren","sich irren"],"info":""},{"latein":"excitāre, excitō","bedeutungen":["aufschrecken","aufwecken"],"info":""},{"latein":"hōra, hōrae f.","bedeutungen":["die Stunde"],"info":""},{"latein":"in","bedeutungen":["in","an","auf","bei"],"info":"Präp. + Abl."},{"latein":"īre, eō, iī","bedeutungen":["gehen"],"info":""},{"latein":"iūcundus, -a, -um","bedeutungen":["erfreulich","angenehm"],"info":""},{"latein":"molestus, -a, -um","bedeutungen":["lästig","unangenehm"],"info":""},{"latein":"nihil","bedeutungen":["nichts"],"info":""},{"latein":"occupātus, -a, -um","bedeutungen":["beschäftigt"],"info":""},{"latein":"patrōnus, patrōnī m.","bedeutungen":["der Schutzherr","der Patron"],"info":""},{"latein":"paucī, -ae, -a Pl.","bedeutungen":["wenige","nur wenige"],"info":""},{"latein":"prīmum","bedeutungen":["zunächst","zuerst"],"info":"Adv."},{"latein":"quō?","bedeutungen":["wohin?"],"info":""},{"latein":"saepe","bedeutungen":["oft"],"info":"Adv."},{"latein":"sēcum","bedeutungen":["bei sich"],"info":""},{"latein":"sermō, sermōnis m.","bedeutungen":["das Gespräch"],"info":""},{"latein":"silentium, silentiī n.","bedeutungen":["die Stille","das Schweigen"],"info":""},{"latein":"thermae, thermārum f. Pl.","bedeutungen":["die Thermen"],"info":""},{"latein":"toga, togae f.","bedeutungen":["die Toga"],"info":""},{"latein":"vestis, vestis f.","bedeutungen":["die Kleidung"],"info":""},{"latein":"vōx, vōcis f.","bedeutungen":["die Stimme"],"info":""}],"8":[{"latein":"adesse, adsum, adfuī","bedeutungen":["da sein","anwesend sein","jdm. beistehen","helfen"],"info":""},{"latein":"aliī, -ae, -a Pl.","bedeutungen":["andere"],"info":""},{"latein":"animadvertere, animadvertō","bedeutungen":["merken","bemerken"],"info":""},{"latein":"arēna, arēnae f.","bedeutungen":["die Arena"],"info":""},{"latein":"arma, armōrum n. Pl.","bedeutungen":["die Waffen"],"info":""},{"latein":"aspicere, aspiciō","bedeutungen":["ansehen"],"info":""},{"latein":"cadere, cadō, cecidī","bedeutungen":["fallen"],"info":""},{"latein":"dēfendere, dēfendō","bedeutungen":["verteidigen"],"info":""},{"latein":"gladiātor, gladiātōris m.","bedeutungen":["der Gladiator"],"info":""},{"latein":"gladius, gladiī m.","bedeutungen":["das Schwert"],"info":""},{"latein":"humī","bedeutungen":["auf dem Boden"],"info":""},{"latein":"iacēre, iaceō","bedeutungen":["liegen"],"info":""},{"latein":"iactāre, iactō","bedeutungen":["werfen","schleudern"],"info":""},{"latein":"īgnōtus, -a, -um","bedeutungen":["unbekannt"],"info":""},{"latein":"in","bedeutungen":["in (…hinein)","gegen","nach","auf"],"info":"Präp. + Akk."},{"latein":"iūdicium, iūdiciī n.","bedeutungen":["das Urteil","die Meinung"],"info":""},{"latein":"mittere, mittō, mīsī, missum","bedeutungen":["schicken","wegschicken"],"info":""},{"latein":"neque","bedeutungen":["und nicht","aber nicht"],"info":"Konj."},{"latein":"oppūgnāre, oppūgnō","bedeutungen":["angreifen","bestürmen"],"info":""},{"latein":"petere, petō","bedeutungen":["angreifen","aufsuchen","fordern"],"info":""},{"latein":"pūgna, pūgnae f.","bedeutungen":["der Kampf"],"info":""},{"latein":"pūgnāre, pūgnō","bedeutungen":["kämpfen"],"info":""},{"latein":"putāre, putō","bedeutungen":["glauben","meinen"],"info":""},{"latein":"rūrsus","bedeutungen":["wieder","von neuem"],"info":"Adv."},{"latein":"saevus, -a, -um","bedeutungen":["wild","heftig"],"info":""},{"latein":"valdē","bedeutungen":["sehr"],"info":"Adv."},{"latein":"vīvere, vīvō","bedeutungen":["leben"],"info":""}],"9":[{"latein":"abīre, abeō, abiī","bedeutungen":["weggehen","verschwinden"],"info":""},{"latein":"aperīre, aperiō, aperuī, apertum","bedeutungen":["öffnen"],"info":""},{"latein":"bibere, bibō","bedeutungen":["trinken"],"info":""},{"latein":"cēdere, cēdō, cessī","bedeutungen":["gehen","(zurück)weichen","nachgeben"],"info":""},{"latein":"cēnsēre, cēnseō, cēnsuī, cēnsum","bedeutungen":["denken","meinen"],"info":""},{"latein":"convīvium, convīviī n.","bedeutungen":["das Gastmahl","das Festessen"],"info":""},{"latein":"corrumpere, corrumpō","bedeutungen":["verderben"],"info":""},{"latein":"cūrāre, cūrō","bedeutungen":["sich kümmern um","dafür sorgen"],"info":""},{"latein":"dē","bedeutungen":["über","von"],"info":"Präp. + Abl."},{"latein":"enim","bedeutungen":["nämlich"],"info":"Konj."},{"latein":"fortūnae, fortūnārum f. Pl.","bedeutungen":["das Vermögen","die Reichtümer"],"info":""},{"latein":"iānua, iānuae f.","bedeutungen":["die Tür"],"info":""},{"latein":"improbus, -a, -um","bedeutungen":["schlecht","böse"],"info":""},{"latein":"īnstāre, īnstō","bedeutungen":["bevorstehen","drohen","verfolgen"],"info":""},{"latein":"īnstituere, īnstituō","bedeutungen":["veranstalten","ausrichten","errichten","unterrichten"],"info":""},{"latein":"intrāre, intrō","bedeutungen":["betreten","eintreten"],"info":""},{"latein":"is, ea, id","bedeutungen":["dieser","diese","dieses","er"],"info":""},{"latein":"licet","bedeutungen":["es ist erlaubt"],"info":""},{"latein":"modo","bedeutungen":["bloß","nur","gerade (eben)"],"info":"Adv."},{"latein":"nocēre, noceō","bedeutungen":["schaden"],"info":""},{"latein":"pārēre, pāreō","bedeutungen":["gehorchen"],"info":""},{"latein":"perdere, perdō","bedeutungen":["verschwenden","vergeuden"],"info":""},{"latein":"poena, poenae f.","bedeutungen":["die Strafe","die Buße"],"info":""},{"latein":"reprehendere, reprehendō","bedeutungen":["tadeln"],"info":""},{"latein":"rūrī","bedeutungen":["auf dem Land"],"info":""},{"latein":"scīre, sciō","bedeutungen":["wissen","kennen"],"info":""},{"latein":"sinere, sinō","bedeutungen":["lassen","zulassen"],"info":""},{"latein":"studēre, studeō","bedeutungen":["bemühen"],"info":""},{"latein":"vīta, vītae f.","bedeutungen":["das Leben"],"info":""}],"10":[{"latein":"abstinēre, abstinēo, abstinuī","bedeutungen":["fernhalten"],"info":""},{"latein":"ad","bedeutungen":["zu (… hin)","bei"],"info":"Präp. + Akk."},{"latein":"adiuvāre, adiuvō, adiūvī","bedeutungen":["unterstützen"],"info":""},{"latein":"animadvertere, animadvertō","bedeutungen":["merken","bemerken"],"info":""},{"latein":"arcēre, arceō, arcuī","bedeutungen":["abwehren","fernhalten"],"info":""},{"latein":"arx, arcis f.","bedeutungen":["die Festung","die Anhöhe"],"info":""},{"latein":"ascendere, ascendō, ascendī","bedeutungen":["besteigen","hinaufsteigen"],"info":""},{"latein":"audīre, audiō","bedeutungen":["(zu)hören"],"info":""},{"latein":"cōnspicere, cōnspiciō","bedeutungen":["erblicken","sehen"],"info":""},{"latein":"custōs, custōdis m.","bedeutungen":["der Wächter"],"info":""},{"latein":"dea, deae f.","bedeutungen":["die Göttin"],"info":""},{"latein":"dēbēre, dēbeō, dēbuī","bedeutungen":["müssen"],"info":""},{"latein":"dēfendere, dēfendō","bedeutungen":["verteidigen"],"info":""},{"latein":"dēpōnere, dēpōnō, dēposuī","bedeutungen":["ablegen"],"info":""},{"latein":"deus, deī m.","bedeutungen":["der Gott"],"info":""},{"latein":"dīcere, dīcō, dīxī, dictum","bedeutungen":["sagen","sprechen","reden"],"info":""},{"latein":"excitāre, excitō","bedeutungen":["aufschrecken","aufwecken"],"info":""},{"latein":"fābula, fābulae f.","bedeutungen":["die Sage","die Erzählung"],"info":""},{"latein":"facere, faciō, fēcī, factum","bedeutungen":["machen","tun"],"info":""},{"latein":"fēmina, fēminae f.","bedeutungen":["die Frau"],"info":""},{"latein":"forte","bedeutungen":["zufällig"],"info":"Adv."},{"latein":"fugere, fugiō, fūgī","bedeutungen":["fliehen","meiden"],"info":""},{"latein":"iactāre, iactō","bedeutungen":["werfen","schleudern"],"info":""},{"latein":"intrāre, intrō","bedeutungen":["betreten","eintreten"],"info":""},{"latein":"legere, legō, lēgī","bedeutungen":["lesen"],"info":""},{"latein":"mīles, mīlitis m.","bedeutungen":["der Soldat"],"info":""},{"latein":"nārrāre, nārrō","bedeutungen":["erzählen"],"info":""},{"latein":"neque … neque","bedeutungen":["weder … noch"],"info":""},{"latein":"nox, noctis f.","bedeutungen":["die Nacht"],"info":""},{"latein":"nūper","bedeutungen":["neulich"],"info":"Adv."},{"latein":"obsidēre, obsideō, obsēdī","bedeutungen":["belagern"],"info":""},{"latein":"oppūgnāre, oppūgnō","bedeutungen":["angreifen","bestürmen"],"info":""},{"latein":"prīmus, -a, -um","bedeutungen":["der erste"],"info":""},{"latein":"procul","bedeutungen":["von fern","weit (weg)"],"info":"Adv."},{"latein":"pūgnāre, pūgnō","bedeutungen":["kämpfen"],"info":""},{"latein":"quondam","bedeutungen":["einst"],"info":"Adv."},{"latein":"sacer, sacra, sacrum","bedeutungen":["heilig","geweiht"],"info":""},{"latein":"sacrum, sacrī n.","bedeutungen":["das Opfer"],"info":""},{"latein":"saxum, saxī n.","bedeutungen":["der Fels"],"info":""},{"latein":"scrībere, scrībō","bedeutungen":["schreiben"],"info":""},{"latein":"servāre, servō","bedeutungen":["retten"],"info":""},{"latein":"tamen","bedeutungen":["dennoch","trotzdem"],"info":"Adv."},{"latein":"templum, templī n.","bedeutungen":["der Tempel"],"info":""},{"latein":"urgēre, urgeō","bedeutungen":["drängen","bedrängen"],"info":""},{"latein":"venīre, veniō, vēnī","bedeutungen":["kommen"],"info":""},{"latein":"vidēre, videō, vīdī","bedeutungen":["sehen"],"info":""}],"11":[{"latein":"accēdere, accēdō, accessī","bedeutungen":["sich nähern","herbeikommen"],"info":""},{"latein":"accendere, accendō, accendī","bedeutungen":["anzünden","entzünden"],"info":""},{"latein":"adhibēre, adhibeō, adhibuī, adhibitum","bedeutungen":["anwenden","hinzuziehen"],"info":""},{"latein":"aliī … aliī","bedeutungen":["einige … andere","die einen … die anderen"],"info":""},{"latein":"aperīre, aperiō, aperuī, apertum","bedeutungen":["öffnen"],"info":""},{"latein":"appārēre, appāreō, appāruī","bedeutungen":["erscheinen"],"info":""},{"latein":"cōnstruere, cōnstruō","bedeutungen":["bauen","errichten"],"info":""},{"latein":"crēdere, crēdō, crēdidī","bedeutungen":["vertrauen","glauben"],"info":""},{"latein":"cupere, cupiō, cupīvī","bedeutungen":["wollen","wünschen"],"info":""},{"latein":"dare, dō, dedī, datum","bedeutungen":["geben"],"info":""},{"latein":"dēlēre, dēleō, dēlēvī, dēlētum","bedeutungen":["zerstören","vernichten"],"info":""},{"latein":"dolus, dolī m.","bedeutungen":["die List"],"info":""},{"latein":"dōnāre, dōnō","bedeutungen":["schenken"],"info":""},{"latein":"dubitāre, dubitō","bedeutungen":["zögern","zweifeln"],"info":""},{"latein":"dūcere, dūcō, dūxī, ductum","bedeutungen":["führen","ziehen"],"info":""},{"latein":"duo, duae, duo","bedeutungen":["zwei"],"info":""},{"latein":"esse, sum, fuī","bedeutungen":["sein"],"info":""},{"latein":"fallere, fallō, fefellī","bedeutungen":["täuschen"],"info":""},{"latein":"hic, haec, hoc","bedeutungen":["dieser","diese","dieses"],"info":""},{"latein":"ille, illa, illud","bedeutungen":["jener","jene","jenes"],"info":""},{"latein":"intereā","bedeutungen":["inzwischen","in der Zwischenzeit"],"info":"Adv."},{"latein":"īra, īrae f.","bedeutungen":["der Zorn"],"info":""},{"latein":"īre, eō, iī","bedeutungen":["gehen"],"info":""},{"latein":"lacrima, lacrimae f.","bedeutungen":["die Träne"],"info":""},{"latein":"monēre, moneō","bedeutungen":["ermahnen","mahnen","warnen"],"info":""},{"latein":"occīdere, occīdō, occīdī","bedeutungen":["töten"],"info":""},{"latein":"occultāre, occultō","bedeutungen":["verbergen"],"info":""},{"latein":"perīculum, perīculī n.","bedeutungen":["die Gefahr"],"info":""},{"latein":"petere, petō","bedeutungen":["angreifen","aufsuchen","fordern"],"info":""},{"latein":"porta, portae f.","bedeutungen":["das Tor"],"info":""},{"latein":"posse, possum, potuī","bedeutungen":["können"],"info":""},{"latein":"proximus, -a, -um","bedeutungen":["der nächste"],"info":""},{"latein":"quamquam","bedeutungen":["obwohl"],"info":""},{"latein":"quia","bedeutungen":["weil"],"info":""},{"latein":"relinquere, relinquō","bedeutungen":["zurücklassen","verlassen"],"info":""},{"latein":"respondēre, respondeō","bedeutungen":["antworten"],"info":""},{"latein":"sacerdōs, sacerdōtis m./f.","bedeutungen":["der Priester","die Priesterin"],"info":""},{"latein":"sīgnificāre, sīgnificō","bedeutungen":["anzeigen","bedeuten","bezeichnen"],"info":""},{"latein":"sine","bedeutungen":["ohne"],"info":"Präp. + Abl."},{"latein":"socius, sociī m.","bedeutungen":["der Gefährte"],"info":""},{"latein":"tēctum, tēctī n.","bedeutungen":["das Haus","das Dach"],"info":""},{"latein":"timēre, timeō","bedeutungen":["(sich) fürchten","Angst haben vor"],"info":""},{"latein":"timor, timōris m.","bedeutungen":["die Furcht","die Angst"],"info":""},{"latein":"tunc","bedeutungen":["dann","damals"],"info":"Adv."},{"latein":"ūnus, -a, -um","bedeutungen":["einer"],"info":""},{"latein":"urbs, urbis f.","bedeutungen":["die Stadt"],"info":""},{"latein":"vērus, -a, -um","bedeutungen":["wahr","richtig"],"info":""},{"latein":"vīvus, -a, -um","bedeutungen":["lebendig","lebend"],"info":""}],"12":[{"latein":"annus, annī m.","bedeutungen":["das Jahr"],"info":""},{"latein":"capere, capiō, cēpī, captum","bedeutungen":["fangen","ergreifen","einnehmen","gefangen nehmen"],"info":""},{"latein":"currere, currō, cucurrī","bedeutungen":["laufen"],"info":""},{"latein":"dēspērāre, dēspērō","bedeutungen":["aufgeben","verzweifeln"],"info":""},{"latein":"dextra, dextrae f.","bedeutungen":["die rechte Hand"],"info":""},{"latein":"diū","bedeutungen":["lange"],"info":"Adv."},{"latein":"fātum, fātī n.","bedeutungen":["das Schicksal"],"info":""},{"latein":"flamma, flammae f.","bedeutungen":["die Flamme"],"info":""},{"latein":"iter, itineris n.","bedeutungen":["der Weg","der Marsch","die Fahrt"],"info":""},{"latein":"mūnus, mūneris n.","bedeutungen":["die Aufgabe"],"info":""},{"latein":"nāvis, nāvis f.","bedeutungen":["das Schiff"],"info":""},{"latein":"nōmen, nōminis n.","bedeutungen":["der Name"],"info":""},{"latein":"novus, -a, -um","bedeutungen":["neu"],"info":""},{"latein":"oculus, oculī m.","bedeutungen":["das Auge"],"info":""},{"latein":"patria, patriae f.","bedeutungen":["die Heimat"],"info":""},{"latein":"perīre, pereō, periī","bedeutungen":["ums Leben kommen","sterben"],"info":""},{"latein":"pius, -a, -um","bedeutungen":["pflichtbewusst"],"info":""},{"latein":"prō","bedeutungen":["für"],"info":"Präp. + Abl."},{"latein":"temptāre, temptō","bedeutungen":["versuchen","prüfen"],"info":""},{"latein":"timēre, timeō","bedeutungen":["(sich) fürchten","Angst haben vor"],"info":""},{"latein":"trādere, trādō","bedeutungen":["übergeben","anvertrauen","überliefern"],"info":""},{"latein":"ubīque","bedeutungen":["überall"],"info":"Adv."},{"latein":"umbra, umbrae f.","bedeutungen":["der Schatten","das Schattenbild"],"info":""}],"13":[{"latein":"adesse, adsum, adfuī","bedeutungen":["da sein","anwesend sein","jdm. beistehen","helfen"],"info":""},{"latein":"bellum, bellī n.","bedeutungen":["der Krieg"],"info":""},{"latein":"cēdere, cēdō, cessī","bedeutungen":["gehen","(zurück)weichen","nachgeben"],"info":""},{"latein":"cōgnōscere, cōgnōscō","bedeutungen":["erfahren","erkennen","kennenlernen"],"info":""},{"latein":"cōnsīdere, cōnsīdō, cōnsēdī","bedeutungen":["sich hinsetzen","sich niederlassen"],"info":""},{"latein":"cōnsistere, cōnsistō, cōnstitī","bedeutungen":["haltmachen","sich aufstellen"],"info":""},{"latein":"deinde","bedeutungen":["hierauf","dann"],"info":"Adv."},{"latein":"dēligere, dēligō","bedeutungen":["auswählen"],"info":""},{"latein":"error, errōris m.","bedeutungen":["die Irrfahrt","der Irrtum","der Fehler"],"info":""},{"latein":"exīre, exeō, exiī","bedeutungen":["hinausgehen","verlassen"],"info":""},{"latein":"fīnis, fīnis m.","bedeutungen":["das Ende","das Ziel","die Grenze"],"info":""},{"latein":"futūrus, -a, -um","bedeutungen":["zukünftig"],"info":""},{"latein":"grātia, grātiae f.","bedeutungen":["der Dank","die Gunst","die Beliebtheit"],"info":""},{"latein":"habitāre, habitō","bedeutungen":["wohnen","bewohnen"],"info":""},{"latein":"hostis, hostis m.","bedeutungen":["der Feind"],"info":""},{"latein":"in","bedeutungen":["in (…hinein)","gegen","nach","auf"],"info":"Präp. + Akk."},{"latein":"īnstituere, īnstituō","bedeutungen":["veranstalten","ausrichten","errichten","unterrichten"],"info":""},{"latein":"ipse, ipsa, ipsum","bedeutungen":["selbst","persönlich","direkt"],"info":""},{"latein":"mox","bedeutungen":["bald"],"info":"Adv."},{"latein":"post","bedeutungen":["nach"],"info":"Präp. + Akk."},{"latein":"prōvidēre, prōvideō","bedeutungen":["voraussehen","vorhersehen"],"info":""},{"latein":"quandō?","bedeutungen":["wann?"],"info":""},{"latein":"subīre, subeō","bedeutungen":["ertragen","auf sich nehmen"],"info":""},{"latein":"tempus, temporis n.","bedeutungen":["die Zeit","der Zeitpunkt"],"info":""},{"latein":"terra, terrae f.","bedeutungen":["die Erde","das Land"],"info":""},{"latein":"tot","bedeutungen":["so viele"],"info":""},{"latein":"voluntās, voluntātis f.","bedeutungen":["der Wille","der Wunsch"],"info":""}],"14":[{"latein":"alere, alō, aluī","bedeutungen":["nähren","ernähren"],"info":""},{"latein":"anteā","bedeutungen":["vorher","früher","zuvor"],"info":"Adv."},{"latein":"appellāre, appellō","bedeutungen":["ansprechen","nennen"],"info":""},{"latein":"avis, avis f.","bedeutungen":["der Vogel"],"info":""},{"latein":"caedere, caedō, cecīdī, caesum","bedeutungen":["töten","schlachten"],"info":""},{"latein":"caedēs, caedis f.","bedeutungen":["die Ermordung","der Mord"],"info":""},{"latein":"condere, condō, condidī, conditum","bedeutungen":["gründen"],"info":""},{"latein":"cōnsilium, cōnsiliī n.","bedeutungen":["der Rat","die Beratung","der Plan"],"info":""},{"latein":"contendere, contendō, contendī","bedeutungen":["behaupten"],"info":""},{"latein":"convenīre, conveniō, convēnī","bedeutungen":["zusammenkommen","jdn. treffen"],"info":""},{"latein":"duodecim","bedeutungen":["zwölf"],"info":""},{"latein":"habēre, habeō, habuī, habitum","bedeutungen":["haben","halten"],"info":""},{"latein":"incipere, incipiō","bedeutungen":["anfangen","beginnen"],"info":""},{"latein":"īnstruere, īnstruō","bedeutungen":["anweisen","unterrichten","bauen"],"info":""},{"latein":"invenīre, inveniō","bedeutungen":["finden"],"info":""},{"latein":"lupa, lupae f.","bedeutungen":["die Wölfin"],"info":""},{"latein":"mūrus, mūri m.","bedeutungen":["die Mauer"],"info":""},{"latein":"occupāre, occupō","bedeutungen":["einnehmen","besetzen"],"info":""},{"latein":"parāre, parō","bedeutungen":["vorbereiten","zubereiten"],"info":""},{"latein":"pāstor, pāstōris m.","bedeutungen":["der Hirte"],"info":""},{"latein":"quod","bedeutungen":["weil"],"info":""},{"latein":"regere, regō, rēxī","bedeutungen":["lenken","herrschen"],"info":""},{"latein":"rēgnum, rēgnī n.","bedeutungen":["die Herrschaft","das Königtum"],"info":""},{"latein":"rēx, rēgis m.","bedeutungen":["der König"],"info":""},{"latein":"rīdēre, rīdeō","bedeutungen":["lachen","jdn. auslachen"],"info":""},{"latein":"rīpa, rīpae f.","bedeutungen":["das Ufer"],"info":""},{"latein":"scelestus, -a, -um","bedeutungen":["verbrecherisch"],"info":""},{"latein":"sex","bedeutungen":["sechs"],"info":""},{"latein":"uterque","bedeutungen":["jeder von beiden"],"info":""},{"latein":"vix","bedeutungen":["kaum"],"info":"Adv."},{"latein":"volāre, volō","bedeutungen":["eilen","fliegen"],"info":""}],"15":[{"latein":"ager, agrī m.","bedeutungen":["der Acker","das Feld"],"info":""},{"latein":"auris, auris f.","bedeutungen":["das Ohr"],"info":""},{"latein":"avāritia, avāritiae f.","bedeutungen":["die Habgier","der Geiz"],"info":""},{"latein":"cīvis, cīvis m.","bedeutungen":["der Bürger"],"info":""},{"latein":"glōria, glōriae f.","bedeutungen":["die Ehre","der Ruhm"],"info":""},{"latein":"grātia, grātiae f.","bedeutungen":["der Dank","die Gunst","die Beliebtheit"],"info":""},{"latein":"iacere, iaciō, iēcī","bedeutungen":["werfen"],"info":""},{"latein":"in","bedeutungen":["in (…hinein)","gegen","nach","auf"],"info":"Präp. + Akk."},{"latein":"labōrāre, labōrō","bedeutungen":["arbeiten"],"info":""},{"latein":"lapis, lapidis m.","bedeutungen":["der Stein"],"info":""},{"latein":"lēx, lēgis f.","bedeutungen":["das Gesetz"],"info":""},{"latein":"lūxuria, lūxuriae f.","bedeutungen":["die Genusssucht"],"info":""},{"latein":"mūtāre, mūtō","bedeutungen":["verändern","(ver)wandeln"],"info":""},{"latein":"nōbilēs, nōbilium m. Pl.","bedeutungen":["die Adligen"],"info":""},{"latein":"opprimere, opprimō","bedeutungen":["unterdrücken"],"info":""},{"latein":"pellere, pellō","bedeutungen":["vertreiben"],"info":""},{"latein":"populus, populī m.","bedeutungen":["das Volk"],"info":""},{"latein":"probus, -a, -um","bedeutungen":["anständig","tüchtig","gut"],"info":""},{"latein":"rōstra, rōstrōrum n. Pl.","bedeutungen":["die Rednerbühne"],"info":""},{"latein":"sēdēs, sēdis f.","bedeutungen":["der Wohnsitz"],"info":""},{"latein":"vērō","bedeutungen":["wirklich","tatsächlich","aber"],"info":"Adv."},{"latein":"vincere, vincō","bedeutungen":["siegen","besiegen","umstimmen"],"info":""}],"16":[{"latein":"accipere, accipiō, accēpī, acceptum","bedeutungen":["annehmen","aufnehmen","empfangen","erfahren"],"info":""},{"latein":"afficere, afficiō, affēcī, affectum","bedeutungen":["mit etw. versehen"],"info":""},{"latein":"aliter","bedeutungen":["sonst","andernfalls","anders"],"info":"Adv."},{"latein":"apud","bedeutungen":["bei"],"info":"Präp. + Akk."},{"latein":"ārdēre, ārdeō, ārsī","bedeutungen":["brennen"],"info":""},{"latein":"caedere, caedō, cecīdī, caesum","bedeutungen":["töten","schlachten"],"info":""},{"latein":"castra, castrōrum n. Pl.","bedeutungen":["das Lager","das Kriegslager"],"info":""},{"latein":"condere, condō, condidī, conditum","bedeutungen":["gründen"],"info":""},{"latein":"corrumpere, corrumpō","bedeutungen":["verderben"],"info":""},{"latein":"dēfendere, dēfendō","bedeutungen":["verteidigen"],"info":""},{"latein":"dīcere, dīcō, dīxī, dictum","bedeutungen":["sagen","sprechen","reden"],"info":""},{"latein":"dūcere, dūcō, dūxī, ductum","bedeutungen":["führen","ziehen"],"info":""},{"latein":"explēre, expleō","bedeutungen":["erfüllen"],"info":""},{"latein":"facere, faciō, fēcī, factum","bedeutungen":["machen","tun"],"info":""},{"latein":"facinus, facinoris n.","bedeutungen":["die Handlung","die Tat"],"info":""},{"latein":"flūmen, flūminis n.","bedeutungen":["der Fluss"],"info":""},{"latein":"foedus, foederis n.","bedeutungen":["der Vertrag","der Friedensvertrag","das Bündnis"],"info":""},{"latein":"honor, honōris m.","bedeutungen":["die Ehre"],"info":""},{"latein":"iactāre, iactō","bedeutungen":["werfen","schleudern"],"info":""},{"latein":"īnstruere, īnstruō","bedeutungen":["anweisen","unterrichten","bauen"],"info":""},{"latein":"invenīre, inveniō","bedeutungen":["finden"],"info":""},{"latein":"is, ea, id","bedeutungen":["dieser","diese","dieses","er"],"info":""},{"latein":"iubēre, iubeō, iussī, iussum","bedeutungen":["befehlen"],"info":""},{"latein":"laudāre, laudō","bedeutungen":["loben"],"info":""},{"latein":"lībertās, lībertātis f.","bedeutungen":["die Freiheit"],"info":""},{"latein":"neque","bedeutungen":["und nicht","aber nicht"],"info":"Konj."},{"latein":"nōnnūllī, -ae, -a Pl.","bedeutungen":["einige","manche"],"info":""},{"latein":"nūntius, nūntiī m.","bedeutungen":["der Bote"],"info":""},{"latein":"obses, obsidis m./f.","bedeutungen":["die Geisel"],"info":""},{"latein":"opprimere, opprimō","bedeutungen":["unterdrücken"],"info":""},{"latein":"pellere, pellō","bedeutungen":["vertreiben"],"info":""},{"latein":"pōnere, pōnō, posuī, positum","bedeutungen":["stellen","aufstellen","setzen"],"info":""},{"latein":"pūnīre, pūniō","bedeutungen":["bestrafen"],"info":""},{"latein":"quī, quae, quod","bedeutungen":["der","die","das","welcher"],"info":""},{"latein":"reddere, reddō","bedeutungen":["zurückgeben"],"info":""},{"latein":"redūcere, redūcō","bedeutungen":["zurückführen"],"info":""},{"latein":"relinquere, relinquō","bedeutungen":["zurücklassen","verlassen"],"info":""},{"latein":"remittere, remittō","bedeutungen":["zurückschicken"],"info":""},{"latein":"repetere, repetō","bedeutungen":["zurückverlangen"],"info":""},{"latein":"reprehendere, reprehendō","bedeutungen":["tadeln"],"info":""},{"latein":"rīdēre, rīdeō","bedeutungen":["lachen","jdn. auslachen"],"info":""},{"latein":"scrībere, scrībō","bedeutungen":["schreiben"],"info":""},{"latein":"sī","bedeutungen":["wenn"],"info":""},{"latein":"sollicitāre, sollicitō","bedeutungen":["beunruhigen","erregen"],"info":""},{"latein":"tangere, tangō","bedeutungen":["berühren"],"info":""},{"latein":"tēlum, tēlī n.","bedeutungen":["das Geschoss","das Wurfgeschoss"],"info":""},{"latein":"trādere, trādō","bedeutungen":["übergeben","anvertrauen","überliefern"],"info":""},{"latein":"virtūs, virtūtis f.","bedeutungen":["die Tapferkeit","die Tugend"],"info":""},{"latein":"vocāre, vocō","bedeutungen":["rufen"],"info":""},{"latein":"vulnus, vulneris n.","bedeutungen":["die Wunde"],"info":""}],"17":[{"latein":"ācer, ācris, ācre","bedeutungen":["energisch","heftig","scharf"],"info":""},{"latein":"agere, agō, ēgī, āctum","bedeutungen":["tun","handeln"],"info":""},{"latein":"alius, alia, aliud","bedeutungen":["ein anderer"],"info":""},{"latein":"audāx","bedeutungen":["wagemutig","frech"],"info":""},{"latein":"audēre, audeō","bedeutungen":["wagen"],"info":""},{"latein":"celer, celeris, celere","bedeutungen":["schnell"],"info":""},{"latein":"cōgnōscere, cōgnōscō","bedeutungen":["erfahren","erkennen","kennenlernen"],"info":""},{"latein":"comes, comitis m.","bedeutungen":["der Begleiter"],"info":""},{"latein":"dīvidere, dīvidō","bedeutungen":["teilen","unterteilen"],"info":""},{"latein":"fēlīx","bedeutungen":["glücklich"],"info":""},{"latein":"grandis, grande","bedeutungen":["groß","bedeutend"],"info":""},{"latein":"gravis, grave","bedeutungen":["schwer","charakterfest","ernst"],"info":""},{"latein":"illūstris, illūstre","bedeutungen":["bekannt","berühmt"],"info":""},{"latein":"ingēns","bedeutungen":["ungeheuer groß"],"info":""},{"latein":"mittere, mittō, mīsī, missum","bedeutungen":["schicken","wegschicken"],"info":""},{"latein":"modus, modī m.","bedeutungen":["die Art","die Weise"],"info":""},{"latein":"mōs, mōris m.","bedeutungen":["die Sitte","der Brauch"],"info":""},{"latein":"omnis, omne","bedeutungen":["jeder","ganz","alle"],"info":""},{"latein":"parāre, parō","bedeutungen":["vorbereiten","zubereiten"],"info":""},{"latein":"praebēre, praebeō","bedeutungen":["bieten","gewähren","anbieten"],"info":""},{"latein":"prōvincia, prōvinciae f.","bedeutungen":["die Provinz"],"info":""},{"latein":"rēgius, -a, -um","bedeutungen":["königlich"],"info":""},{"latein":"sibī Dat.","bedeutungen":["sich"],"info":""},{"latein":"singulāris, singulāre","bedeutungen":["einzigartig"],"info":""},{"latein":"varius, -a, -um","bedeutungen":["verschieden","verschiedenartig"],"info":""},{"latein":"vās, vāsis n.","bedeutungen":["das Gefäß"],"info":""}],"18":[{"latein":"amor, amōris m.","bedeutungen":["die Liebe"],"info":""},{"latein":"an?","bedeutungen":["oder (etwa)?"],"info":""},{"latein":"audācia, audāciae f.","bedeutungen":["die Frechheit","der Mut"],"info":""},{"latein":"brevis, breve","bedeutungen":["kurz"],"info":""},{"latein":"capere, capiō, cēpī, captum","bedeutungen":["fangen","ergreifen","einnehmen","gefangen nehmen"],"info":""},{"latein":"captīvus, captīvī m.","bedeutungen":["der Gefangene"],"info":""},{"latein":"carcer, carceris m.","bedeutungen":["das Gefängnis"],"info":""},{"latein":"carmen, carminis n.","bedeutungen":["das Gedicht","das Lied"],"info":""},{"latein":"dīves","bedeutungen":["reich"],"info":""},{"latein":"dormīre, dormiō","bedeutungen":["schlafen"],"info":""},{"latein":"dux, ducis m.","bedeutungen":["der Anführer"],"info":""},{"latein":"expōnere, expōnō","bedeutungen":["aussetzen","darstellen","beschreiben"],"info":""},{"latein":"gerere, gerō, gessī, gestum","bedeutungen":["tragen","ausführen"],"info":""},{"latein":"īnstāre, īnstō","bedeutungen":["bevorstehen","drohen","verfolgen"],"info":""},{"latein":"laus, laudis f.","bedeutungen":["das Lob"],"info":""},{"latein":"nāvigāre, nāvigō","bedeutungen":["segeln"],"info":""},{"latein":"nōbilis, nōbile","bedeutungen":["adlig","vornehm"],"info":""},{"latein":"nūllus, -a, -um","bedeutungen":["keiner"],"info":""},{"latein":"pīrāta, pīrātae m.","bedeutungen":["der Seeräuber","der Pirat"],"info":""},{"latein":"poscere, poscō","bedeutungen":["fordern"],"info":""},{"latein":"quīnquāgintā","bedeutungen":["fünfzig"],"info":""},{"latein":"redīre, redeō","bedeutungen":["zurückkehren","zurückgehen"],"info":""},{"latein":"solvere, solvō","bedeutungen":["zahlen","bezahlen","lösen"],"info":""},{"latein":"supplicium, suppliciī n.","bedeutungen":["die Todesstrafe"],"info":""},{"latein":"tantum","bedeutungen":["nur"],"info":"Adv."},{"latein":"terrēre, terreō","bedeutungen":["jdn. erschrecken"],"info":""},{"latein":"terror, terrōris m.","bedeutungen":["der Schrecken"],"info":""},{"latein":"vīgintī","bedeutungen":["zwanzig"],"info":""}],"19":[{"latein":"aeternus, -a, -um","bedeutungen":["ewig"],"info":""},{"latein":"coniūrātiō, coniūrātiōnis f.","bedeutungen":["die Verschwörung"],"info":""},{"latein":"contemnere, contemnō","bedeutungen":["verachten"],"info":""},{"latein":"dēligere, dēligō","bedeutungen":["auswählen"],"info":""},{"latein":"dēsinere, dēsinō","bedeutungen":["aufhören"],"info":""},{"latein":"et","bedeutungen":["und"],"info":"Konj."},{"latein":"etsī","bedeutungen":["auch wenn"],"info":""},{"latein":"excēdere, excēdō","bedeutungen":["hinausgehen","sich entfernen"],"info":""},{"latein":"īgnōrāre, īgnōrō","bedeutungen":["nicht kennen","nicht wissen"],"info":""},{"latein":"incendere, incendō","bedeutungen":["in Brand stecken","entflammen"],"info":""},{"latein":"iste, ista, istud","bedeutungen":["dieser da","diese da","dieses da"],"info":""},{"latein":"latēre, lateō","bedeutungen":["verborgen sein","versteckt sein"],"info":""},{"latein":"nēmō","bedeutungen":["niemand"],"info":""},{"latein":"nōndum","bedeutungen":["noch nicht"],"info":"Adv."},{"latein":"ōrātiō, ōrātiōnis f.","bedeutungen":["die Rede"],"info":""},{"latein":"pars, partis f.","bedeutungen":["der Teil"],"info":""},{"latein":"patēre, pateō","bedeutungen":["offensichtlich sein","offen stehen"],"info":""},{"latein":"salvus, -a, -um","bedeutungen":["gesund","wohlbehalten","gerettet"],"info":""},{"latein":"ūnā","bedeutungen":["zusammen"],"info":"Adv."}],"20":[{"latein":"accidere, accidō, accidī","bedeutungen":["geschehen","zustoßen"],"info":""},{"latein":"āmittere, āmittō, āmīsī, āmissum","bedeutungen":["verlieren"],"info":""},{"latein":"cōgere, cōgō, coēgī, coāctum","bedeutungen":["jdn. zwingen","jdn. zusammenbringen","versammeln"],"info":""},{"latein":"cōnstituere, cōnstituō","bedeutungen":["beschließen"],"info":""},{"latein":"docēre, doceō, docuī, doctum","bedeutungen":["unterrichten","lehren"],"info":""},{"latein":"dulcis, dulce","bedeutungen":["süß","angenehm"],"info":""},{"latein":"dum + Präs.","bedeutungen":["während"],"info":""},{"latein":"effugere, effugiō","bedeutungen":["entfliehen","entkommen"],"info":""},{"latein":"frūstrā","bedeutungen":["vergeblich","umsonst"],"info":"Adv."},{"latein":"imprīmīs","bedeutungen":["vor allem","besonders"],"info":"Adv."},{"latein":"īnsula, īnsulae f.","bedeutungen":["die Insel"],"info":""},{"latein":"iter, itineris n.","bedeutungen":["der Weg","der Marsch","die Fahrt"],"info":""},{"latein":"memoria, memoriae f.","bedeutungen":["das Gedächtnis","die Erinnerung"],"info":""},{"latein":"monēre, moneō","bedeutungen":["ermahnen","mahnen","warnen"],"info":""},{"latein":"neglegere, neglegō","bedeutungen":["vernachlässigen","nicht beachten"],"info":""},{"latein":"numquam","bedeutungen":["niemals"],"info":"Adv."},{"latein":"ōrnāre, ōrnō","bedeutungen":["ausrüsten","schmücken"],"info":""},{"latein":"postquam + Perf.","bedeutungen":["nachdem"],"info":""},{"latein":"prope","bedeutungen":["nahe bei","in die Nähe (von)"],"info":"Präp. + Akk."},{"latein":"situs, -a, -um","bedeutungen":["befindlich","gelegen"],"info":""},{"latein":"solvere, solvō","bedeutungen":["zahlen","bezahlen","lösen"],"info":""},{"latein":"unda, undae f.","bedeutungen":["die Welle","die Flut"],"info":""},{"latein":"vinculum, vinculī n.","bedeutungen":["die Fessel"],"info":""},{"latein":"vīvere, vīvō","bedeutungen":["leben"],"info":""}],"21":[{"latein":"abesse, absum, āfuī","bedeutungen":["weg sein","entfernt sein"],"info":""},{"latein":"animus, animī m.","bedeutungen":["der Geist","das Gemüt","das Herz","der Mut"],"info":""},{"latein":"bēstia, bēstiae f.","bedeutungen":["das (wilde) Tier"],"info":""},{"latein":"commovēre, commoveō","bedeutungen":["bewegen","veranlassen","(jdn.) rühren"],"info":""},{"latein":"dēsīderium, dēsīderiī n.","bedeutungen":["die Sehnsucht"],"info":""},{"latein":"diēs, diēī m.","bedeutungen":["der Tag"],"info":""},{"latein":"dolor, dolōris m.","bedeutungen":["der Schmerz"],"info":""},{"latein":"ē, ex","bedeutungen":["aus (… heraus)","von","seit"],"info":"Präp. + Abl."},{"latein":"fidēs, fideī f.","bedeutungen":["der Schutz","der Beistand","die Treue","der Glaube"],"info":""},{"latein":"flēre, fleō, flēvī, flētum","bedeutungen":["(be)weinen"],"info":""},{"latein":"lūx, lūcis f.","bedeutungen":["das Licht","das Tageslicht"],"info":""},{"latein":"mandāre, mandō","bedeutungen":["übergeben","auftragen","befehlen"],"info":""},{"latein":"nūptiae, nūptiārum f. Pl.","bedeutungen":["die Hochzeit"],"info":""},{"latein":"optāre, optō","bedeutungen":["wünschen"],"info":""},{"latein":"ōrāre, ōrō","bedeutungen":["(er)bitten"],"info":""},{"latein":"pergere, pergō","bedeutungen":["etw. weiter tun","fortsetzen"],"info":""},{"latein":"perniciēs, perniciēī f.","bedeutungen":["das Verderben"],"info":""},{"latein":"pervenīre, perveniō","bedeutungen":["gelangen"],"info":""},{"latein":"pēs, pedis m.","bedeutungen":["der Fuß"],"info":""},{"latein":"plēnus, -a, -um","bedeutungen":["voll"],"info":""},{"latein":"quaesō","bedeutungen":["(ich) bitte!"],"info":""},{"latein":"rēgīna, rēgīnae f.","bedeutungen":["die Königin"],"info":""},{"latein":"rēs, reī f.","bedeutungen":["die Sache","der Vorfall"],"info":""},{"latein":"salūs, salūtis f.","bedeutungen":["das Wohlergehen","der Gruß","die Rettung"],"info":""},{"latein":"spēs, speī f.","bedeutungen":["die Hoffnung"],"info":""},{"latein":"superāre, superō","bedeutungen":["überwältigen","besiegen"],"info":""},{"latein":"turba, turbae f.","bedeutungen":["die Menge"],"info":""}],"22":[{"latein":"arbor, arboris f.","bedeutungen":["der Baum"],"info":""},{"latein":"aurum, aurī n.","bedeutungen":["das Gold"],"info":""},{"latein":"cēnāre, cēnō","bedeutungen":["speisen","die Hauptmahlzeit zu sich nehmen"],"info":""},{"latein":"cibus, cibī m.","bedeutungen":["die Speise"],"info":""},{"latein":"cōnspicere, cōnspiciō","bedeutungen":["erblicken","sehen"],"info":""},{"latein":"dīvitiae, dīvitiārum f. Pl.","bedeutungen":["der Reichtum"],"info":""},{"latein":"error, errōris m.","bedeutungen":["die Irrfahrt","der Irrtum","der Fehler"],"info":""},{"latein":"fidēs, fideī f.","bedeutungen":["der Schutz","der Beistand","die Treue","der Glaube"],"info":""},{"latein":"fingere, fingō, fīnxī, fictum","bedeutungen":["vorstellen","ausdenken"],"info":""},{"latein":"grātia, grātiae f.","bedeutungen":["der Dank","die Gunst","die Beliebtheit"],"info":""},{"latein":"līberāre, līberō","bedeutungen":["befreien"],"info":""},{"latein":"maximē","bedeutungen":["am meisten","ganz besonders"],"info":"Adv."},{"latein":"mīrus, -a, -um","bedeutungen":["wunderbar","erstaunlich"],"info":""},{"latein":"modo","bedeutungen":["bloß","nur","gerade (eben)"],"info":"Adv."},{"latein":"nisī","bedeutungen":["wenn nicht"],"info":""},{"latein":"ōs, ōris n.","bedeutungen":["der Mund"],"info":""},{"latein":"pōculum, pōculī n.","bedeutungen":["der Becher"],"info":""},{"latein":"prūdēns","bedeutungen":["klug"],"info":""},{"latein":"stultus, -a, -um","bedeutungen":["dumm"],"info":""},{"latein":"temptāre, temptō","bedeutungen":["versuchen","prüfen"],"info":""},{"latein":"tenēre, teneō","bedeutungen":["halten"],"info":""},{"latein":"torquēre, torqueō","bedeutungen":["foltern"],"info":""},{"latein":"trahere, trahō","bedeutungen":["ziehen"],"info":""},{"latein":"vīnum, vīnī n.","bedeutungen":["der Wein"],"info":""}],"23":[{"latein":"cīvitās, cīvitātis f.","bedeutungen":["die Bürgerschaft","der Staat","das Bürgerrecht"],"info":""},{"latein":"cōnfirmāre, cōnfirmō","bedeutungen":["bestätigen"],"info":""},{"latein":"cōnscrībere, cōnscrībō","bedeutungen":["anwerben"],"info":""},{"latein":"contrā","bedeutungen":["gegen"],"info":"Präp. + Akk."},{"latein":"convenīre, conveniō, convēnī","bedeutungen":["zusammenkommen","jdn. treffen"],"info":""},{"latein":"dictum, dictī n.","bedeutungen":["die Äußerung","der Ausspruch"],"info":""},{"latein":"fidēlis, fidēle","bedeutungen":["treu"],"info":""},{"latein":"habēre, habeō, habuī, habitum","bedeutungen":["haben","halten"],"info":""},{"latein":"hūc","bedeutungen":["hierher","hierhin"],"info":"Adv."},{"latein":"īgnōrāre, īgnōrō","bedeutungen":["nicht kennen","nicht wissen"],"info":""},{"latein":"imperāre, imperō","bedeutungen":["befehlen"],"info":""},{"latein":"imperium, imperiī n.","bedeutungen":["der Befehl","die Herrschaft","das Herrschaftsgebiet"],"info":""},{"latein":"inopia, inopiae f.","bedeutungen":["die Armut","die Not"],"info":""},{"latein":"libenter","bedeutungen":["gern"],"info":"Adv."},{"latein":"mēnsis, mēnsis m.","bedeutungen":["der Monat"],"info":""},{"latein":"mōs, mōris m.","bedeutungen":["die Sitte","der Brauch"],"info":""},{"latein":"nūntiāre, nūntiō","bedeutungen":["melden"],"info":""},{"latein":"obtinēre, obtineō","bedeutungen":["erhalten","innehaben"],"info":""},{"latein":"philosophus, philosophī m.","bedeutungen":["der Philosoph"],"info":""},{"latein":"praedicāre, praedicō","bedeutungen":["rühmen","lobend hervorheben"],"info":""},{"latein":"praestāre, praestō","bedeutungen":["sich hervortun","auszeichnen","zeigen"],"info":""},{"latein":"sē refl.","bedeutungen":["sich"],"info":"Pers.-Pron."},{"latein":"sibī Dat.","bedeutungen":["sich"],"info":""},{"latein":"sōl, sōlis m.","bedeutungen":["die Sonne"],"info":""},{"latein":"sub","bedeutungen":["unter"],"info":"Präp. + Abl."},{"latein":"turpis, turpe","bedeutungen":["schimpflich","hässlich"],"info":""},{"latein":"velle, volō, voluī","bedeutungen":["wollen","wünschen"],"info":""}],"24":[{"latein":"causa, causae f.","bedeutungen":["der Grund","die Ursache","der Streitfall"],"info":""},{"latein":"cōpiae, cōpiārum f. Pl.","bedeutungen":["die Truppen"],"info":""},{"latein":"duo, duae, duo","bedeutungen":["zwei"],"info":""},{"latein":"fundere, fundō","bedeutungen":["zerstreuen","forttreiben"],"info":""},{"latein":"gēns, gentis f.","bedeutungen":["der Volksstamm"],"info":""},{"latein":"imperātor, imperātōris m.","bedeutungen":["der Kaiser","der Feldherr"],"info":""},{"latein":"intellegere, intellegō","bedeutungen":["bemerken","einsehen","verstehen"],"info":""},{"latein":"laetitia, laetitiae f.","bedeutungen":["die Freude"],"info":""},{"latein":"maximus, -a, -um","bedeutungen":["der größte"],"info":""},{"latein":"nōmināre, nōminō","bedeutungen":["jdn. etwas nennen"],"info":""},{"latein":"praetereā","bedeutungen":["außerdem"],"info":"Adv."},{"latein":"proelium, proeliī n.","bedeutungen":["der Kampf"],"info":""},{"latein":"putāre, putō","bedeutungen":["glauben","meinen"],"info":""},{"latein":"quoque","bedeutungen":["auch"],"info":"Adv."},{"latein":"tertius, -a, -um","bedeutungen":["der dritte"],"info":""},{"latein":"vincere, vincō","bedeutungen":["siegen","besiegen","umstimmen"],"info":""}],"25":[{"latein":"adeō","bedeutungen":["so sehr"],"info":"Adv."},{"latein":"animadvertere, animadvertō","bedeutungen":["merken","bemerken"],"info":""},{"latein":"ars, artis f.","bedeutungen":["die Geschicklichkeit","die Kunst","die Wissenschaft"],"info":""},{"latein":"cōgere, cōgō, coēgī, coāctum","bedeutungen":["jdn. zwingen","jdn. zusammenbringen","versammeln"],"info":""},{"latein":"efficere, efficiō","bedeutungen":["herstellen","bauen","bewirken"],"info":""},{"latein":"expūgnāre, expūgnō","bedeutungen":["erobern"],"info":""},{"latein":"fōrma, fōrmae f.","bedeutungen":["die Form"],"info":""},{"latein":"ingenium, ingeniī n.","bedeutungen":["die Begabung","das Talent"],"info":""},{"latein":"īnstrūmentum, īnstrūmentī n.","bedeutungen":["das Gerät","das Werkzeug"],"info":""},{"latein":"māchina, māchinae f.","bedeutungen":["die Maschine"],"info":""},{"latein":"mandāre, mandō","bedeutungen":["übergeben","auftragen","befehlen"],"info":""},{"latein":"moenia, moenium n. Pl.","bedeutungen":["die Stadtmauer"],"info":""},{"latein":"monumentum, monumentī n.","bedeutungen":["das Denkmal","das Grabmal"],"info":""},{"latein":"mora, morae f.","bedeutungen":["die Verzögerung"],"info":""},{"latein":"ōrnāre, ōrnō","bedeutungen":["ausrüsten","schmücken"],"info":""},{"latein":"pendēre, pendeō","bedeutungen":["hängen","herabhängen"],"info":""},{"latein":"posterī, posterōrum m. Pl.","bedeutungen":["die Nachkommen","die Nachwelt"],"info":""},{"latein":"postulāre, postulō","bedeutungen":["fordern"],"info":""},{"latein":"praeesse, praesum","bedeutungen":["befehligen","den Oberbefehl haben über"],"info":""},{"latein":"tantus, -a, -um","bedeutungen":["so groß","so viel"],"info":""},{"latein":"turbāre, turbō","bedeutungen":["stören","in Unordnung bringen"],"info":""},{"latein":"undique","bedeutungen":["von allen Seiten","von überall (her)"],"info":"Adv."},{"latein":"ut + Konjunktiv","bedeutungen":["(so) dass","damit"],"info":""},{"latein":"victōria, victōriae f.","bedeutungen":["der Sieg"],"info":""}],"26":[{"latein":"abdūcere, abdūcō, abdūxī, abductum","bedeutungen":["abführen","wegführen"],"info":""},{"latein":"cadere, cadō, cecidī","bedeutungen":["fallen"],"info":""},{"latein":"caelum, caelī n.","bedeutungen":["der Himmel"],"info":""},{"latein":"cīvitās, cīvitātis f.","bedeutungen":["die Bürgerschaft","der Staat","das Bürgerrecht"],"info":""},{"latein":"clādēs, clādis f.","bedeutungen":["die Niederlage"],"info":""},{"latein":"cōnspectus, cōnspectūs m.","bedeutungen":["der Anblick","das Blickfeld"],"info":""},{"latein":"cum + Konjunktiv","bedeutungen":["als","nachdem","weil","obwohl"],"info":""},{"latein":"cupidus, -a, -um","bedeutungen":["begierig (nach etwas)"],"info":""},{"latein":"dare, dō, dedī, datum","bedeutungen":["geben"],"info":""},{"latein":"dēlēre, dēleō, dēlēvī, dēlētum","bedeutungen":["zerstören","vernichten"],"info":""},{"latein":"ēventus, ēventūs m.","bedeutungen":["der Ausgang"],"info":""},{"latein":"exercitus, exercitūs m.","bedeutungen":["das Heer"],"info":""},{"latein":"fortis, forte","bedeutungen":["mutig","tapfer"],"info":""},{"latein":"impellere, impellō","bedeutungen":["veranlassen"],"info":""},{"latein":"impetus, impetūs m.","bedeutungen":["der Angriff"],"info":""},{"latein":"īnsidiae, īnsidiārum f. Pl.","bedeutungen":["der Hinterhalt"],"info":""},{"latein":"legiō, legiōnis f.","bedeutungen":["die Legion"],"info":""},{"latein":"locus, locī m.","bedeutungen":["der Ort","der Platz"],"info":""},{"latein":"manus, manūs f.","bedeutungen":["die Hand"],"info":""},{"latein":"metus, metūs m.","bedeutungen":["die Furcht"],"info":""},{"latein":"persuādēre, persuādeō","bedeutungen":["überzeugen","überreden"],"info":""},{"latein":"petere, petō","bedeutungen":["angreifen","aufsuchen","fordern"],"info":""},{"latein":"placidus, -a, -um","bedeutungen":["friedfertig","ruhig"],"info":""},{"latein":"prīnceps, prīncipis m.","bedeutungen":["der Fürst","der Erste"],"info":""},{"latein":"quattuor","bedeutungen":["vier"],"info":""},{"latein":"servitūs, servitūtis f.","bedeutungen":["die Knechtschaft","die Sklaverei"],"info":""},{"latein":"silva, silvae f.","bedeutungen":["der Wald"],"info":""},{"latein":"tendere, tendō","bedeutungen":["strecken","spannen"],"info":""},{"latein":"terribilis, terribile","bedeutungen":["schrecklich"],"info":""},{"latein":"trēs, trēs, tria","bedeutungen":["drei"],"info":""},{"latein":"tumultus, tumultūs m.","bedeutungen":["der Tumult","der Aufruhr"],"info":""}],"27":[{"latein":"adicere, adiciō, adiēcī, adiectum","bedeutungen":["hinzusetzen","hinzufügen"],"info":""},{"latein":"aedificāre, aedificō","bedeutungen":["bauen"],"info":""},{"latein":"auctor, auctōris m.","bedeutungen":["der Veranlasser","der Urheber"],"info":""},{"latein":"caput, capitis n.","bedeutungen":["der Kopf"],"info":""},{"latein":"causa, causae f.","bedeutungen":["der Grund","die Ursache","der Streitfall"],"info":""},{"latein":"cottīdiē","bedeutungen":["täglich"],"info":"Adv."},{"latein":"cūrāre, cūrō","bedeutungen":["sich kümmern um","dafür sorgen"],"info":""},{"latein":"figūra, figūrae f.","bedeutungen":["die Gestalt","die Figur"],"info":""},{"latein":"frōns, frontis f.","bedeutungen":["die Vorderseite","die Stirn"],"info":""},{"latein":"hospes, hospitis m.","bedeutungen":["der Gast","der Fremde"],"info":""},{"latein":"īgnārus, -a, -um","bedeutungen":["unkundig","unwissend"],"info":""},{"latein":"incipere, incipiō","bedeutungen":["anfangen","beginnen"],"info":""},{"latein":"lūdus, lūdī m.","bedeutungen":["das Spiel","das Schauspiel"],"info":""},{"latein":"medius, -a, -um","bedeutungen":["der mittlere","mitten (in)"],"info":""},{"latein":"observāre, observō","bedeutungen":["beobachten"],"info":""},{"latein":"ōmen, ōminis n.","bedeutungen":["das Vorzeichen"],"info":""},{"latein":"persuādēre, persuādeō","bedeutungen":["überzeugen","überreden"],"info":""},{"latein":"prīnceps, prīncipis m.","bedeutungen":["der Fürst","der Erste"],"info":""},{"latein":"quīdam, quaedam, quoddam","bedeutungen":["ein bestimmter","gewisser"],"info":""},{"latein":"quotiēns","bedeutungen":["wie oft","sooft"],"info":""},{"latein":"solēre, soleō","bedeutungen":["gewohnt sein","pflegen"],"info":""},{"latein":"succēdere, succēdō","bedeutungen":["an die Stelle treten","nachfolgen"],"info":""},{"latein":"summus, -a, -um","bedeutungen":["der oberste","der höchste"],"info":""},{"latein":"tālis, tāle","bedeutungen":["so beschaffen","solch ein"],"info":""},{"latein":"theātrum, theātrī n.","bedeutungen":["das Theater"],"info":""},{"latein":"vērus, -a, -um","bedeutungen":["wahr","richtig"],"info":""}],"28":[{"latein":"augēre, augeō, auxī, auctum","bedeutungen":["vergrößern","vermehren"],"info":""},{"latein":"celebrāre, celebrō","bedeutungen":["feiern","rühmen"],"info":""},{"latein":"domus, domūs f.","bedeutungen":["das Haus","die Familie"],"info":""},{"latein":"efficere, efficiō","bedeutungen":["herstellen","bauen","bewirken"],"info":""},{"latein":"fīnis, fīnis m.","bedeutungen":["das Ende","das Ziel","die Grenze"],"info":""},{"latein":"florēre, flōreō","bedeutungen":["blühen"],"info":""},{"latein":"frūctus, frūctūs m.","bedeutungen":["die Frucht"],"info":""},{"latein":"frūmentum, frūmentī n.","bedeutungen":["das Getreide"],"info":""},{"latein":"imperium, imperiī n.","bedeutungen":["der Befehl","die Herrschaft","das Herrschaftsgebiet"],"info":""},{"latein":"longus, -a, -um","bedeutungen":["lang","weit"],"info":""},{"latein":"negāre, negō","bedeutungen":["ablehnen","verneinen","sich weigern"],"info":""},{"latein":"orbis, orbis m.","bedeutungen":["der Kreis"],"info":""},{"latein":"pāx, pācis f.","bedeutungen":["der Frieden"],"info":""},{"latein":"per","bedeutungen":["über","durch","während"],"info":"Präp. + Akk."},{"latein":"permittere, permittō","bedeutungen":["erlauben","gestatten"],"info":""},{"latein":"perpetuus, -a, -um","bedeutungen":["ununterbrochen","fortlaufend"],"info":""},{"latein":"poēta, poētae m.","bedeutungen":["der Dichter"],"info":""},{"latein":"potestās, potestātis f.","bedeutungen":["die Macht","die Gewalt","die Möglichkeit"],"info":""},{"latein":"quantus, -a, -um?","bedeutungen":["wie groß?","wie viel?"],"info":""},{"latein":"saeculum, saeculī n.","bedeutungen":["das Zeitalter","das Jahrhundert"],"info":""},{"latein":"statuere, statuō","bedeutungen":["beschließen","festsetzen"],"info":""},{"latein":"ultimus, -a, -um","bedeutungen":["der letzte","der äußerste"],"info":""},{"latein":"umquam","bedeutungen":["jemals"],"info":"Adv."}],"29":[{"latein":"altus, -a, -um","bedeutungen":["hoch","tief"],"info":""},{"latein":"certāmen, certāminis n.","bedeutungen":["der Wettkampf","der Wettstreit"],"info":""},{"latein":"clam","bedeutungen":["heimlich"],"info":"Adv."},{"latein":"claudere, claudō, clausī, clausum","bedeutungen":["schließen","verschließen"],"info":""},{"latein":"cōnsulere, cōnsulō","bedeutungen":["sich beraten","beratschlagen"],"info":""},{"latein":"dīligere, dīligō","bedeutungen":["lieben","wertschätzen"],"info":""},{"latein":"etiam","bedeutungen":["auch","sogar"],"info":"Konj."},{"latein":"ēvenīre, ēveniō","bedeutungen":["sich ereignen"],"info":""},{"latein":"iūdex, iūdicis m.","bedeutungen":["der Richter"],"info":""},{"latein":"nescīre, nesciō","bedeutungen":["nicht wissen","nicht kennen"],"info":""},{"latein":"offendere, offendō","bedeutungen":["beleidigen"],"info":""},{"latein":"oppidum, oppidī n.","bedeutungen":["die (Land-)Stadt"],"info":""},{"latein":"parere, pariō","bedeutungen":["hervorbringen","gebären"],"info":""},{"latein":"praestāre, praestō","bedeutungen":["sich hervortun","auszeichnen","zeigen"],"info":""},{"latein":"pūblicus, -a, -um","bedeutungen":["öffentlich"],"info":""},{"latein":"quōmodo?","bedeutungen":["wie?","auf welche Weise?"],"info":""},{"latein":"rēs pūblica, reī pūblicae f.","bedeutungen":["der Staat","das Gemeinwesen"],"info":""},{"latein":"simulāre, simulō","bedeutungen":["vortäuschen","so tun","als ob"],"info":""},{"latein":"tamquam","bedeutungen":["wie","als ob"],"info":"Adv."}],"30":[{"latein":"afferre, afferō, attulī, allātum","bedeutungen":["heranbringen"],"info":""},{"latein":"ait","bedeutungen":["er sagt","er sagte"],"info":""},{"latein":"alter, -a, -um","bedeutungen":["der eine","der andere"],"info":""},{"latein":"auxilium, auxiliī n.","bedeutungen":["die Hilfe"],"info":""},{"latein":"concordia, concordiae f.","bedeutungen":["die Eintracht","die Harmonie"],"info":""},{"latein":"cursus, cursūs m.","bedeutungen":["der Lauf","die Fahrt"],"info":""},{"latein":"dolēre, doleō, doluī","bedeutungen":["Schmerz empfinden","bedauern"],"info":""},{"latein":"familiāris, familiāre","bedeutungen":["vertraut"],"info":""},{"latein":"ferre, ferō, tulī, lātum","bedeutungen":["tragen","bringen"],"info":""},{"latein":"frangere, frangō","bedeutungen":["zerbrechen","schwächen"],"info":""},{"latein":"gemitus, gemitūs m.","bedeutungen":["das Seufzen","das Stöhnen"],"info":""},{"latein":"iussū","bedeutungen":["auf Befehl"],"info":""},{"latein":"laedere, laedō, laesī, laesum","bedeutungen":["verletzen","beschädigen"],"info":""},{"latein":"laetus, -a, -um","bedeutungen":["fröhlich"],"info":""},{"latein":"mēns, mentis f.","bedeutungen":["die Gesinnung","der Gedanke","die Absicht"],"info":""},{"latein":"nimis","bedeutungen":["zu","zu sehr"],"info":"Adv."},{"latein":"offerre, offerō","bedeutungen":["anbieten"],"info":""},{"latein":"optimus, -a, -um","bedeutungen":["der beste"],"info":""},{"latein":"paene","bedeutungen":["beinahe","fast"],"info":"Adv."},{"latein":"potēns","bedeutungen":["mächtig"],"info":""},{"latein":"restituere, restituō","bedeutungen":["wiederherstellen"],"info":""},{"latein":"surgere, surgō","bedeutungen":["aufstehen","sich erheben"],"info":""},{"latein":"tollere, tollō","bedeutungen":["beseitigen","hochheben"],"info":""},{"latein":"ūsque ad","bedeutungen":["bis zu"],"info":""}]};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const MAX_L = 30;
+let data = {};
+let currentLektion = null;
+let quizState = null;
+let currentTab = 'vokabeln';
+let importMode = 'pdf';
+let multiSelection = new Set(); // keys like 'L3', 'L7'
+let multiPanelOpen = false;
+
+function loadData() {
+  try { const r = localStorage.getItem('pontes_v2'); if (r) data = JSON.parse(r); } catch(e) {}
+  for (let i = 1; i <= MAX_L; i++) {
+    const k = 'L' + i;
+    if (!data[k]) {
+      // Seed with preloaded data
+      data[k] = { vokabeln: (PRELOADED[String(i)] || []).map(v => ({...v})) };
+    }
+  }
+}
+function saveData() { try { localStorage.setItem('pontes_v2', JSON.stringify(data)); } catch(e) {} }
+loadData();
+
+// ── SIDEBAR ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const el = document.getElementById('lektion-list');
+  let html = '';
+  for (let i = 1; i <= MAX_L; i++) {
+    const k = 'L' + i;
+    const cnt = data[k].vokabeln.length;
+    const active = currentLektion === k ? 'active' : '';
+    const hasVoks = cnt > 0 ? 'has-voks' : '';
+    html += `<button class="lektion-btn ${active} ${hasVoks}" onclick="selectLektion('${k}')">Lektion ${i}<span class="count">${cnt}</span></button>`;
+  }
+  el.innerHTML = html;
+  renderMultiChips();
+}
+
+function selectLektion(k) { currentLektion = k; currentTab = 'vokabeln'; renderSidebar(); renderContent(); }
+
+// ── CONTENT ──────────────────────────────────────────────────────────────────
+function renderContent() {
+  const el = document.getElementById('content');
+  if (!currentLektion) { el.innerHTML = '<div class="empty-state"><i class="ti ti-book-2"></i><p>Wähle eine Lektion aus der linken Seitenleiste, um die Vokabeln anzusehen oder einen Test zu starten.</p></div>'; return; }
+  const num = currentLektion.replace('L','');
+  const voks = data[currentLektion].vokabeln;
+  el.innerHTML = `
+    <div class="section-header">
+      <h2>Lektion ${num}</h2>
+      <div class="actions-row">
+        ${voks.length > 0 ? `<button class="btn primary" onclick="startQuiz()"><i class="ti ti-player-play" aria-hidden="true"></i> Test starten (${voks.length})</button>` : ''}
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn ${currentTab==='vokabeln'?'active':''}" onclick="switchTab('vokabeln')">Vokabeln (${voks.length})</button>
+      <button class="tab-btn ${currentTab==='import'?'active':''}" onclick="switchTab('import')">Importieren</button>
+      <button class="tab-btn ${currentTab==='manuell'?'active':''}" onclick="switchTab('manuell')">Manuell</button>
+    </div>
+    <div id="tab-content">${renderTab()}</div>`;
+}
+
+function renderTab() {
+  if (currentTab === 'vokabeln') return renderVokabeln();
+  if (currentTab === 'import') return renderImport();
+  if (currentTab === 'manuell') return renderManuell();
+  return '';
+}
+function switchTab(t) { currentTab = t; renderContent(); }
+
+function renderVokabeln() {
+  const voks = data[currentLektion].vokabeln;
+  if (!voks.length) return `<div class="empty-state"><i class="ti ti-vocabulary" aria-hidden="true"></i><p>Noch keine Vokabeln. Importiere eine Datei oder füge sie manuell hinzu.</p></div>`;
+  const rows = voks.map((v,i) => `<tr><td><span class="vok-lat">${v.latein}</span>${v.info?`<br><span class="vok-info">${v.info}</span>`:''}</td><td>${v.bedeutungen.join(', ')}</td><td><button class="btn sm danger" onclick="deleteVok(${i})"><i class="ti ti-trash" aria-hidden="true"></i></button></td></tr>`).join('');
+  return `<table class="vok-table"><thead><tr><th>Latein</th><th>Deutsch</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderImport() {
+  const isPdf = importMode === 'pdf';
+  return `
+    <div class="ai-info"><i class="ti ti-sparkles" aria-hidden="true" style="font-size:15px;margin-top:1px;flex-shrink:0"></i><span>Die Datei wird per KI analysiert. Vokabelpaare werden automatisch erkannt — aus Tabellen, Wortlisten und Fotos von Schulbuchseiten.</span></div>
+    <div class="upload-toggle">
+      <button class="upload-tab-btn ${isPdf?'active':''}" onclick="setImportMode('pdf')"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> PDF</button>
+      <button class="upload-tab-btn ${!isPdf?'active':''}" onclick="setImportMode('bild')"><i class="ti ti-photo" aria-hidden="true"></i> Bild</button>
+    </div>
+    ${isPdf ? `<label class="upload-zone" for="pdf-upload" id="upload-zone"><i class="ti ti-file-type-pdf" aria-hidden="true"></i><p>PDF hier ablegen oder klicken</p><small>Vokabelseiten aus Pontes oder eigene Listen</small></label><input type="file" id="pdf-upload" accept=".pdf" onchange="handlePDF(this)">` :
+    `<label class="upload-zone" for="img-upload" id="upload-zone"><i class="ti ti-photo" aria-hidden="true"></i><p>Bild hier ablegen oder klicken</p><small>JPG, PNG, WebP — z.B. Foto einer Schulbuchseite oder handgeschriebenen Liste</small></label><input type="file" id="img-upload" accept="image/*" onchange="handleImage(this)">`}
+    <div id="img-preview"></div>
+    <div id="import-status" class="import-result"></div>`;
+}
+
+function setImportMode(m) { importMode = m; renderContent(); }
+
+function renderManuell() {
+  return `<div class="manual-add">
+    <p style="font-size:13px;color:#888780;margin-bottom:.75rem">Vokabel manuell eintragen. Mehrere Bedeutungen mit Komma trennen.</p>
+    <div class="manual-row">
+      <div><div class="field-label">Latein</div><input class="mini-input" id="m-lat" placeholder="z.B. puer, -i"></div>
+      <div><div class="field-label">Deutsch (kommagetrennt)</div><input class="mini-input" id="m-deu" placeholder="z.B. Junge, Knabe"></div>
+      <button class="btn primary" onclick="addManual()"><i class="ti ti-plus" aria-hidden="true"></i> Hinzufügen</button>
+    </div>
+    <div style="margin-top:8px"><div class="field-label">Wortinfo (optional)</div><input class="mini-input" id="m-info" placeholder="z.B. m., 2. Dekl." style="max-width:260px"></div>
+  </div>
+  ${renderVokabeln()}`;
+}
+
+function addManual() {
+  const lat = document.getElementById('m-lat').value.trim();
+  const deu = document.getElementById('m-deu').value.trim();
+  const info = document.getElementById('m-info')?.value.trim() || '';
+  if (!lat || !deu) return;
+  data[currentLektion].vokabeln.push({ latein: lat, bedeutungen: deu.split(',').map(s=>s.trim()).filter(Boolean), info });
+  saveData(); renderContent();
+}
+function deleteVok(i) { data[currentLektion].vokabeln.splice(i, 1); saveData(); renderContent(); }
+
+// ── IMPORT ───────────────────────────────────────────────────────────────────
+function setLoadingZone(msg) {
+  const z = document.getElementById('upload-zone');
+  if (z) z.innerHTML = `<i class="ti ti-loader spin" aria-hidden="true"></i><p>${msg}</p><small>Einen Moment bitte …</small>`;
+}
+function resetZone() {
+  const z = document.getElementById('upload-zone');
+  if (!z) return;
+  if (importMode === 'pdf') z.innerHTML = `<i class="ti ti-file-type-pdf" aria-hidden="true"></i><p>PDF hier ablegen oder klicken</p><small>Vokabelseiten aus Pontes oder eigene Listen</small>`;
+  else z.innerHTML = `<i class="ti ti-photo" aria-hidden="true"></i><p>Bild hier ablegen oder klicken</p><small>JPG, PNG, WebP — z.B. Foto einer Schulbuchseite</small>`;
+}
+
+async function handlePDF(input) {
+  const file = input.files[0]; if (!file) return;
+  const s = document.getElementById('import-status'); s.style.display = 'none';
+  setLoadingZone('Analysiere PDF mit KI …');
+  try {
+    const b64 = await toBase64(file);
+    const result = await callClaude([{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:'Extrahiere alle lateinischen Vokabeln mit deutschen Bedeutungen aus dieser PDF-Seite.'}]);
+    applyResult(result, s);
+  } catch(e) { showError(s, e.message); resetZone(); }
+}
+
+async function handleImage(input) {
+  const file = input.files[0]; if (!file) return;
+  const s = document.getElementById('import-status'); s.style.display = 'none';
+  const prev = document.getElementById('img-preview');
+  prev.innerHTML = `<img src="${URL.createObjectURL(file)}" class="preview-img" alt="Vorschau">`;
+  setLoadingZone('Analysiere Bild mit KI …');
+  try {
+    const mt = file.type || 'image/jpeg';
+    const b64 = await toBase64(file);
+    const result = await callClaude([{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'Extrahiere alle lateinischen Vokabeln mit deutschen Bedeutungen aus diesem Bild. Das Bild zeigt eine Vokabelliste oder Schulbuchseite.'}]);
+    applyResult(result, s);
+  } catch(e) { showError(s, e.message); resetZone(); }
+}
+
+function applyResult(result, s) {
+  if (!result || !result.length) throw new Error('Keine Vokabeln erkannt');
+  let added = 0;
+  result.forEach(v => { if (v.latein && v.bedeutungen?.length) { data[currentLektion].vokabeln.push(v); added++; } });
+  saveData();
+  s.className = 'import-result ok'; s.style.display = 'block';
+  s.textContent = `✓ ${added} Vokabeln importiert.`;
+  renderSidebar(); switchTab('vokabeln');
+}
+function showError(s, msg) { s.className = 'import-result error'; s.style.display = 'block'; s.textContent = 'Fehler: ' + msg; }
+
+function toBase64(file) {
+  return new Promise((res,rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = () => rej(new Error('Datei konnte nicht gelesen werden')); r.readAsDataURL(file); });
+}
+
+async function callClaude(content) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000,
+      system:'Du bist ein Vokabel-Extraktor für das Lateinlehrwerk Pontes. Extrahiere ALLE Vokabelpaare aus der Datei. Antworte NUR mit einem JSON-Array ohne Backticks oder Markdown. Format: [{"latein":"puer, pueri","bedeutungen":["Junge","Knabe"],"info":"m., 2. Dekl."},...]. Bedeutungen als Array. Info ist Wortart/Deklination falls erkennbar, sonst leerer String.',
+      messages: [{role:'user', content}] })
+  });
+  const d = await resp.json();
+  const text = d.content.map(c=>c.text||'').join('');
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+// ── MULTI-LEKTION ─────────────────────────────────────────────────────────────
+function toggleMultiPanel() {
+  multiPanelOpen = !multiPanelOpen;
+  document.getElementById('multi-panel').classList.toggle('open', multiPanelOpen);
+}
+
+function renderMultiChips() {
+  const chips = document.getElementById('multi-chips');
+  if (!chips) return;
+  const atMax = multiSelection.size >= 5;
+  let html = '';
+  for (let i = 1; i <= MAX_L; i++) {
+    const k = 'L' + i;
+    const cnt = data[k].vokabeln.length;
+    const sel = multiSelection.has(k);
+    const dis = !sel && atMax;
+    html += `<span class="multi-chip ${sel?'selected':''} ${dis?'disabled':''}" onclick="toggleMultiChip('${k}')" title="${cnt} Vokabeln">L${i}</span>`;
+  }
+  chips.innerHTML = html;
+  // update start button
+  const btn = document.getElementById('multi-start-btn');
+  const lbl = document.getElementById('multi-start-label');
+  if (!btn || !lbl) return;
+  const totalVoks = [...multiSelection].reduce((s,k)=>s+data[k].vokabeln.length, 0);
+  btn.disabled = multiSelection.size < 2 || totalVoks === 0;
+  const nums = [...multiSelection].map(k=>k.replace('L','')).sort((a,b)=>+a-+b).join(', ');
+  lbl.textContent = multiSelection.size >= 2 ? `Test starten (${totalVoks})` : 'Mindestens 2 wählen';
+}
+
+function toggleMultiChip(k) {
+  if (multiSelection.has(k)) {
+    multiSelection.delete(k);
+  } else {
+    if (multiSelection.size >= 5) return;
+    multiSelection.add(k);
+  }
+  renderMultiChips();
+}
+
+function startMultiQuiz() {
+  if (multiSelection.size < 2) return;
+  const allVoks = [];
+  const sortedKeys = [...multiSelection].sort((a,b)=>+a.replace('L','')-+b.replace('L',''));
+  for (const k of sortedKeys) {
+    data[k].vokabeln.forEach(v => allVoks.push({...v, _lektion: k.replace('L','')}));
+  }
+  if (!allVoks.length) return;
+  const lektionLabel = sortedKeys.map(k=>k.replace('L','')).join(', ');
+  quizState = {
+    voks: allVoks.sort(()=>Math.random()-.5),
+    idx: 0, correct: 0, wrong: 0, skipped: 0,
+    multiLabel: 'Lektionen ' + lektionLabel,
+    wrongVoks: []
+  };
+  renderQuiz();
+}
+
+// ── QUIZ ─────────────────────────────────────────────────────────────────────
+function startQuiz() {
+  const voks = data[currentLektion].vokabeln; if (!voks.length) return;
+  quizState = { voks: voks.map(v=>({...v, _lektion:null})).sort(()=>Math.random()-.5), idx:0, correct:0, wrong:0, skipped:0, multiLabel:null, wrongVoks:[] };
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const el = document.getElementById('content'), q = quizState;
+  if (q.idx >= q.voks.length) { renderResult(); return; }
+  const vok = q.voks[q.idx], total = q.voks.length, pct = Math.round(q.idx/total*100);
+  const title = q.multiLabel || ('Lektion ' + currentLektion.replace('L',''));
+  const lektionTag = vok._lektion ? `<span class="quiz-lektion-tag">L${vok._lektion}</span>` : '';
+  el.innerHTML = `
+    <div class="section-header"><h2>Test — ${title}</h2><button class="btn" onclick="abortQuiz()"><i class="ti ti-x" aria-hidden="true"></i> Abbrechen</button></div>
+    <div class="quiz-card">
+      <div class="quiz-progress"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><span class="progress-text">${q.idx+1} / ${total}</span></div>
+      <div style="margin-bottom:1.25rem">
+        <div class="latin-word">${vok.latein}${lektionTag}</div>
+        ${vok.info ? `<div class="latin-meta">${vok.info}</div>` : ''}
+        <div style="font-size:13px;color:#B4B2A9;margin-top:4px">Was bedeutet dieses Wort auf Deutsch?</div>
+      </div>
+      <div class="answer-row">
+        <input class="answer-input" id="answer" placeholder="Deutsche Übersetzung …" autofocus onkeydown="if(event.key==='Enter')checkAnswer()">
+        <button class="btn primary" onclick="checkAnswer()">Prüfen</button>
+        <button class="btn" onclick="skipQuestion()" title="Überspringen"><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <div id="next-row" style="margin-top:.75rem;display:none"><button class="btn primary" onclick="nextQuestion()">Weiter <i class="ti ti-arrow-right" aria-hidden="true"></i></button></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val green">${q.correct}</div><div class="stat-lab">Richtig</div></div>
+      <div class="stat-card"><div class="stat-val red">${q.wrong}</div><div class="stat-lab">Falsch</div></div>
+      <div class="stat-card"><div class="stat-val">${q.skipped}</div><div class="stat-lab">Übersprungen</div></div>
+    </div>`;
+  document.getElementById('answer').focus();
+}
+
+// Strip German articles (der/die/das/ein/eine) from the start of a string
+function stripArticle(s) { return s.replace(/^(der|die|das|ein|eine)\s+/i,'').trim(); }
+
+function normalize(s) {
+  return s.toLowerCase()
+    .replace(/[äÄ]/g,'ae').replace(/[öÖ]/g,'oe').replace(/[üÜ]/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+}
+function levenshtein(a,b) {
+  const m=a.length,n=b.length,dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i?j?0:i:j));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+function isClose(userRaw, correctRaw) {
+  // Compare with and without articles, in all combinations
+  const variants = (s) => {
+    const n = normalize(s);
+    const ns = normalize(stripArticle(s));
+    return n === ns ? [n] : [n, ns];
+  };
+  const uVars = variants(userRaw);
+  const cVars = variants(correctRaw);
+  for (const u of uVars) {
+    for (const c of cVars) {
+      if (u === c) return true;
+      // Typo tolerance: 1 error up to 5 chars, 2 errors up to 10 chars, 3 errors for longer words
+      const maxErr = c.length <= 4 ? 0 : c.length <= 7 ? 1 : c.length <= 12 ? 2 : 3;
+      if (levenshtein(u, c) <= maxErr) return true;
+    }
+  }
+  return false;
+}
+
+function checkAnswer() {
+  const ansEl=document.getElementById('answer'), fb=document.getElementById('feedback'), nr=document.getElementById('next-row');
+  const raw=ansEl.value.trim(); if(!raw) return;
+  const vok=quizState.voks[quizState.idx], ok=vok.bedeutungen.some(b=>isClose(raw,b));
+  ansEl.disabled=true; ansEl.className='answer-input '+(ok?'correct':'wrong');
+  if(ok){
+    quizState.correct++;
+    fb.className='feedback correct';
+    fb.innerHTML=`<i class="ti ti-check" aria-hidden="true"></i> Richtig!${vok.bedeutungen.length>1?' Mögliche Bedeutungen: '+vok.bedeutungen.join(', '):''}`;
+  } else {
+    quizState.wrong++;
+    quizState.wrongVoks.push({...vok, userAnswer: raw});
+    fb.className='feedback wrong';
+    fb.innerHTML=`<i class="ti ti-x" aria-hidden="true"></i> Nicht ganz. Richtige Bedeutungen: <strong>${vok.bedeutungen.join(', ')}</strong>`;
+  }
+  nr.style.display='block';
+}
+function nextQuestion() { quizState.idx++; renderQuiz(); }
+function skipQuestion() { quizState.skipped++; quizState.idx++; renderQuiz(); }
+function abortQuiz() {
+  const wasMulti = quizState && quizState.multiLabel;
+  quizState = null;
+  if (wasMulti) {
+    // Return to empty state since no single lektion is "current"
+    const el = document.getElementById('content');
+    el.innerHTML = '<div class="empty-state"><i class="ti ti-book-2" aria-hidden="true"></i><p>Wähle eine Lektion aus der linken Seitenleiste, oder starte einen Kombinationstest.</p></div>';
+  } else {
+    currentTab = 'vokabeln'; renderContent();
+  }
+}
+
+function renderResult() {
+  const el=document.getElementById('content'), q=quizState, total=q.voks.length, pct=Math.round(q.correct/total*100);
+  const note=pct>=90?'Ausgezeichnet!':pct>=75?'Sehr gut!':pct>=60?'Gut gemacht!':pct>=50?'Weiter üben!':'Noch mehr üben!';
+  const title = q.multiLabel || ('Lektion ' + currentLektion.replace('L',''));
+  const savedWrong = [...q.wrongVoks]; // save before quizState is nulled
+
+  // Build wrong list HTML
+  let wrongHtml = '';
+  if (savedWrong.length > 0) {
+    const rows = savedWrong.map(v => {
+      const lTag = v._lektion ? ` <span style="font-size:10px;color:#a08040">(L${v._lektion})</span>` : '';
+      return `<div class="wrong-item"><span class="wrong-lat">${v.latein}${lTag}</span><span class="wrong-deu">${v.bedeutungen.join(', ')}</span></div>`;
+    }).join('');
+    wrongHtml = `<div class="result-wrong-list"><h4><i class="ti ti-list-check" style="margin-right:5px"></i>Falsch beantwortet (${savedWrong.length})</h4>${rows}</div>`;
+  }
+
+  el.innerHTML=`<div class="quiz-result">
+    <div style="font-size:13px;color:#a08040;margin-bottom:.5rem;font-style:italic">Test abgeschlossen · ${title}</div>
+    <div class="result-score">${pct}%</div>
+    <div class="result-label">${note}</div>
+    <div class="stats-grid" style="margin:1.25rem 0">
+      <div class="stat-card"><div class="stat-val green">${q.correct}</div><div class="stat-lab">Richtig</div></div>
+      <div class="stat-card"><div class="stat-val red">${q.wrong}</div><div class="stat-lab">Falsch</div></div>
+      <div class="stat-card"><div class="stat-val">${q.skipped}</div><div class="stat-lab">Übersprungen</div></div>
+    </div>
+    ${wrongHtml}
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn primary" onclick="${q.multiLabel?'startMultiQuiz()':'startQuiz()'}"><i class="ti ti-refresh" aria-hidden="true"></i> Nochmal</button>
+      ${savedWrong.length>0?`<button class="btn pdf-btn" onclick="downloadWrongPDF()"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Fehlerliste als PDF</button>`:''}
+      <button class="btn" onclick="abortQuiz()"><i class="ti ti-list" aria-hidden="true"></i> ${q.multiLabel?'Zur Übersicht':'Zur Vokabelliste'}</button>
+    </div>
+  </div>`;
+
+  // Keep wrongVoks accessible for PDF after quizState is cleared
+  window._lastWrongVoks = savedWrong;
+  window._lastTitle = title;
+  quizState=null;
+}
+
+function downloadWrongPDF() {
+  const wrong = window._lastWrongVoks || [];
+  const title = window._lastTitle || 'Vokabeltest';
+  if (!wrong.length) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, margin = 18;
+
+  // ── Decorative header bar
+  doc.setFillColor(26, 21, 14);
+  doc.rect(0, 0, W, 28, 'F');
+  doc.setFillColor(139, 105, 20);
+  doc.rect(0, 26, W, 2, 'F');
+
+  // Title
+  doc.setTextColor(232, 201, 106);
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  doc.text('PONTES — Fehlerliste', margin, 12);
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(200, 170, 80);
+  doc.text(title + '  ·  ' + wrong.length + ' Vokabeln zum Wiederholen', margin, 20);
+
+  // Date
+  const d = new Date();
+  const dateStr = d.toLocaleDateString('de-DE');
+  doc.text(dateStr, W - margin, 20, {align:'right'});
+
+  // Subtitle / tip
+  doc.setTextColor(100, 80, 40);
+  doc.setFontSize(8.5);
+  doc.text('Diese Vokabeln wurden im Test falsch beantwortet. Übe sie gezielt!', margin, 35);
+
+  // Column headers
+  let y = 44;
+  doc.setFillColor(245, 240, 232);
+  doc.rect(margin, y-5, W - 2*margin, 8, 'F');
+  doc.setDrawColor(196, 176, 122);
+  doc.rect(margin, y-5, W - 2*margin, 8, 'D');
+  doc.setFontSize(9);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(107, 79, 10);
+  doc.text('Latein', margin+3, y);
+  doc.text('Deutsch', 100, y);
+  if (wrong.some(v=>v._lektion)) doc.text('Lek.', W-margin-10, y);
+  y += 5;
+
+  // Table rows
+  doc.setFont('helvetica','normal');
+  let rowAlt = false;
+  for (const v of wrong) {
+    if (y > 270) {
+      doc.addPage();
+      // Mini header on new pages
+      doc.setFillColor(26, 21, 14);
+      doc.rect(0, 0, W, 12, 'F');
+      doc.setFillColor(139, 105, 20);
+      doc.rect(0, 11, W, 1, 'F');
+      doc.setTextColor(232, 201, 106);
+      doc.setFontSize(9);
+      doc.setFont('helvetica','bold');
+      doc.text('PONTES — Fehlerliste (Fortsetzung)', margin, 8);
+      doc.setFont('helvetica','normal');
+      y = 22;
+    }
+    if (rowAlt) { doc.setFillColor(252, 248, 240); doc.rect(margin, y-4, W-2*margin, 7, 'F'); }
+    rowAlt = !rowAlt;
+
+    // Latin word (bold)
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(40, 25, 5);
+    const latinText = doc.splitTextToSize(v.latein, 78);
+    doc.text(latinText, margin+3, y);
+
+    // German meanings
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(80, 60, 20);
+    const deutText = doc.splitTextToSize(v.bedeutungen.join(', '), 80);
+    doc.text(deutText, 100, y);
+
+    // Lektion tag
+    if (v._lektion) {
+      doc.setFontSize(8);
+      doc.setTextColor(139, 105, 20);
+      doc.text('L'+v._lektion, W-margin-10, y);
+    }
+
+    // Separator line
+    doc.setDrawColor(220, 205, 170);
+    doc.line(margin, y+3, W-margin, y+3);
+    y += 8;
+    doc.setFontSize(9.5);
+  }
+
+  // Footer
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(26, 21, 14);
+    doc.rect(0, 288, W, 9, 'F');
+    doc.setTextColor(139, 105, 20);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica','normal');
+    doc.text('Pontes Lateinvokabeltrainer  ·  Seite ' + p + ' / ' + pages, W/2, 294, {align:'center'});
+  }
+
+  doc.save('Fehlerliste_' + title.replace(/[^a-zA-Z0-9]/g,'_') + '.pdf');
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+renderSidebar();
+</script>
+</body>
+</html>
